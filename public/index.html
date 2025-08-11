@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberTech News Aggregator</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <div class="header-row">
+                    <h1 class="title">
+                        <i class="fas fa-shield-alt"></i>
+                        CyberTech News
+                    </h1>
+                    
+                    <div class="search-container">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="Search articles..." class="search-input">
+                        <button id="clearSearch" class="clear-search" style="display: none;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="control-buttons">
+                        <button id="themeToggle" class="control-btn" title="Toggle Dark Mode">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                        <button id="autoRefreshToggle" class="control-btn" title="Toggle Auto Refresh">
+                            <i class="fas fa-clock"></i>
+                        </button>
+                        <button id="savedArticlesBtn" class="control-btn" title="Saved Articles">
+                            <i class="fas fa-bookmark"></i>
+                            <span class="saved-count" id="savedCount">0</span>
+                        </button>
+                    </div>
+                    
+                    <div class="refresh-section">
+                        <button id="refreshBtn" class="refresh-btn">
+                            <i class="fas fa-sync-alt"></i>
+                            Refresh
+                        </button>
+                        <div class="progress-bar" id="progressBar">
+                            <div class="progress-fill"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="Cybersecurity">
+                            <i class="fas fa-lock"></i>
+                            Security
+                        </button>
+                        <button class="filter-btn" data-filter="Technology">
+                            <i class="fas fa-microchip"></i>
+                            Tech
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="stats">
+            <div class="stat-card">
+                <i class="fas fa-newspaper"></i>
+                <div>
+                    <span class="stat-number" id="totalArticles">0</span>
+                    <span class="stat-label">Articles</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-globe"></i>
+                <div>
+                    <span class="stat-number" id="totalSources">4</span>
+                    <span class="stat-label">Sources</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-clock"></i>
+                <div>
+                    <span class="stat-number" id="lastUpdate">--</span>
+                    <span class="stat-label">Last Update</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p>Fetching latest news...</p>
+        </div>
+
+        <div class="trending-section" id="trendingSection" style="display: none;">
+            <h3 class="trending-title">
+                <i class="fas fa-fire"></i>
+                Trending Topics
+            </h3>
+            <div class="trending-tags" id="trendingTags"></div>
+        </div>
+
+        <div class="news-grid" id="newsGrid">
+        </div>
+
+        <div class="skeleton-loader" id="skeletonLoader" style="display: none;">
+            <div class="skeleton-card">
+                <div class="skeleton-header">
+                    <div class="skeleton-badge"></div>
+                    <div class="skeleton-badge small"></div>
+                </div>
+                <div class="skeleton-title"></div>
+                <div class="skeleton-content"></div>
+                <div class="skeleton-content short"></div>
+                <div class="skeleton-footer">
+                    <div class="skeleton-date"></div>
+                    <div class="skeleton-button"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="no-articles" id="noArticles" style="display: none;">
+            <i class="fas fa-search"></i>
+            <h3>No articles found</h3>
+            <p>Try refreshing or changing your filter</p>
+        </div>
+    </div>
+
+    <div class="saved-articles-modal" id="savedModal" style="display: none;">
+        <div class="modal-overlay" onclick="closeSavedModal()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-bookmark"></i> Saved Articles</h3>
+                <button onclick="closeSavedModal()" class="close-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="savedArticlesList">
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2024 CyberTech News Aggregator. Sources: BleepingComputer, Cybersecurity News, Neowin, AskWoody</p>
+            <div class="footer-links">
+                <a href="#" onclick="refreshNews()">Refresh</a>
+                <a href="https://github.com" target="_blank">GitHub</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
