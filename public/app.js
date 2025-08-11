@@ -19,6 +19,7 @@ class NewsAggregator {
         this.updateSavedCount();
         this.setupAutoRefresh();
         this.loadNews();
+        this.loadDynamicSources();
     }
 
     bindEventListeners() {
@@ -628,6 +629,28 @@ class NewsAggregator {
         if (card) {
             card.scrollIntoView({ behavior: 'smooth', block: 'center' });
             card.style.animation = 'pulse 1s ease';
+        }
+    }
+
+    async loadDynamicSources() {
+        try {
+            const response = await fetch('/api/sources');
+            if (response.ok) {
+                const sources = await response.json();
+                const activeSources = sources.filter(source => source.status === 'active');
+                const sourceNames = activeSources.map(source => source.name);
+                
+                const dynamicSourcesElement = document.getElementById('dynamicSources');
+                if (sourceNames.length > 0) {
+                    dynamicSourcesElement.textContent = `Sources: ${sourceNames.join(', ')}`;
+                } else {
+                    dynamicSourcesElement.textContent = 'Sources: None active';
+                }
+            }
+        } catch (error) {
+            console.error('Error loading dynamic sources for footer:', error);
+            // Fallback to default sources
+            document.getElementById('dynamicSources').textContent = 'Sources: BleepingComputer, Cybersecurity News, Neowin, AskWoody';
         }
     }
 }

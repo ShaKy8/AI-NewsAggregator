@@ -1,0 +1,56 @@
+[
+  {
+    "id": "1",
+    "name": "BleepingComputer",
+    "url": "https://www.bleepingcomputer.com/",
+    "category": "Cybersecurity",
+    "status": "active",
+    "articleCount": 10,
+    "lastSuccess": "2025-08-11T22:26:35.136Z",
+    "created": "2025-08-11T22:09:57.719Z",
+    "lastError": null,
+    "lastAttempt": "2025-08-11T22:26:35.136Z"
+  },
+  {
+    "id": "2",
+    "name": "Cybersecurity News",
+    "url": "https://cybersecuritynews.com/",
+    "category": "Cybersecurity",
+    "status": "active",
+    "articleCount": 0,
+    "lastSuccess": null,
+    "created": "2025-08-11T22:09:57.719Z"
+  },
+  {
+    "id": "3",
+    "name": "Neowin",
+    "url": "https://www.neowin.net/",
+    "category": "Technology",
+    "status": "active",
+    "articleCount": 0,
+    "lastSuccess": null,
+    "created": "2025-08-11T22:09:57.719Z"
+  },
+  {
+    "id": "4",
+    "name": "AskWoody",
+    "url": "https://www.askwoody.com/",
+    "category": "Technology",
+    "status": "active",
+    "articleCount": 0,
+    "lastSuccess": null,
+    "created": "2025-08-11T22:09:57.719Z"
+  },
+  {
+    "id": "1754951073270",
+    "name": "TechCrunch",
+    "url": "https://techcrunch.com/",
+    "category": "Technology",
+    "status": "active",
+    "created": "2025-08-11T22:24:33.270Z",
+    "articleCount": 1,
+    "lastSuccess": "2025-08-11T22:26:38.806Z",
+    "lastError": null,
+    "lastAttempt": "2025-08-11T22:26:38.806Z"
+  }
+]

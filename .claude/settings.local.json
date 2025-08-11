@@ -34,7 +34,10 @@
       "Bash(sudo loginctl:*)",
       "Bash(loginctl show-user:*)",
       "Bash(git remote set-head:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(node:*)",
+      "Bash(lsof:*)",
+      "Bash(git add:*)"
     ],
     "deny": []
   }

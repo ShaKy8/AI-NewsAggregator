@@ -1,34 +1,82 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
+const fs = require('fs').promises;
+const path = require('path');
 
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36';
+const SOURCES_FILE = path.join(__dirname, '../sources.json');
 
-const newsSources = [
-  {
-    name: 'BleepingComputer',
-    url: 'https://www.bleepingcomputer.com/',
-    scraper: scrapeBleepingComputer,
-    category: 'Cybersecurity'
-  },
-  {
-    name: 'Cybersecurity News',
-    url: 'https://cybersecuritynews.com/',
-    scraper: scrapeCybersecurityNews,
-    category: 'Cybersecurity'
-  },
-  {
-    name: 'Neowin',
-    url: 'https://www.neowin.net/',
-    scraper: scrapeNeowin,
-    category: 'Technology'
-  },
-  {
-    name: 'AskWoody',
-    url: 'https://www.askwoody.com/',
-    scraper: scrapeAskWoody,
-    category: 'Technology'
+// Load sources dynamically from sources.json
+async function loadDynamicSources() {
+  try {
+    const data = await fs.readFile(SOURCES_FILE, 'utf8');
+    const sources = JSON.parse(data);
+    
+    // Only return active sources
+    return sources
+      .filter(source => source.status === 'active')
+      .map(source => ({
+        name: source.name,
+        url: source.url,
+        category: source.category,
+        scraper: getScraperForSource(source),
+        source: source // Keep original source data
+      }));
+  } catch (error) {
+    console.error('Error loading dynamic sources, falling back to defaults:', error);
+    return getDefaultSources();
   }
-];
+}
+
+// Get appropriate scraper function for a source
+function getScraperForSource(source) {
+  // Map known sources to their specific scrapers
+  const scraperMap = {
+    'BleepingComputer': scrapeBleepingComputer,
+    'Cybersecurity News': scrapeCybersecurityNews,
+    'Neowin': scrapeNeowin,
+    'AskWoody': scrapeAskWoody,
+    'TechCrunch': scrapeTechCrunch
+  };
+  
+  // If we have a specific scraper, use it
+  if (scraperMap[source.name]) {
+    return scraperMap[source.name];
+  }
+  
+  // Otherwise use generic scraper with custom selectors
+  return () => scrapeGeneric(source);
+}
+
+// Default sources fallback
+function getDefaultSources() {
+  return [
+    {
+      name: 'BleepingComputer',
+      url: 'https://www.bleepingcomputer.com/',
+      scraper: scrapeBleepingComputer,
+      category: 'Cybersecurity'
+    },
+    {
+      name: 'Cybersecurity News',
+      url: 'https://cybersecuritynews.com/',
+      scraper: scrapeCybersecurityNews,
+      category: 'Cybersecurity'
+    },
+    {
+      name: 'Neowin',
+      url: 'https://www.neowin.net/',
+      scraper: scrapeNeowin,
+      category: 'Technology'
+    },
+    {
+      name: 'AskWoody',
+      url: 'https://www.askwoody.com/',
+      scraper: scrapeAskWoody,
+      category: 'Technology'
+    }
+  ];
+}
 
 async function fetchPage(url) {
   try {
@@ -180,6 +228,97 @@ async function scrapeAskWoody() {
   return articles;
 }
 
+async function scrapeTechCrunch() {
+  const html = await fetchPage('https://techcrunch.com/');
+  if (!html) return [];
+
+  const $ = cheerio.load(html);
+  const articles = [];
+
+  // TechCrunch uses WordPress blocks with wp-block-post-title for articles
+  $('.wp-block-post-title').each((i, element) => {
+    if (i >= 10) return false;
+    
+    const $element = $(element);
+    const $link = $element.find('a').first();
+    const title = $link.text().trim();
+    const link = $link.attr('href');
+    
+    // Look for summary in nearby paragraph or use a fallback
+    let summary = '';
+    const $container = $element.closest('.wp-block-group, .wp-block-columns');
+    if ($container.length) {
+      summary = $container.find('.wp-block-paragraph').first().text().trim();
+    }
+    
+    // Look for date information
+    const publishedAt = $container.find('.wp-block-post-date, .post-date').text().trim() || 'Recently';
+
+    if (title && link) {
+      articles.push({
+        title,
+        link: link.startsWith('http') ? link : `https://techcrunch.com${link}`,
+        summary: summary || 'No summary available',
+        source: 'TechCrunch',
+        category: 'Technology',
+        publishedAt,
+        scraped: new Date().toISOString()
+      });
+    }
+  });
+
+  return articles;
+}
+
+// Generic scraper that uses custom CSS selectors
+async function scrapeGeneric(sourceConfig) {
+  const html = await fetchPage(sourceConfig.url);
+  if (!html) return [];
+
+  const $ = cheerio.load(html);
+  const articles = [];
+  
+  // Default selectors if none provided
+  const selectors = sourceConfig.selectors || {
+    container: 'article, .post, .entry, .news-item',
+    title: 'h1, h2, h3, .title, .headline',
+    link: 'a',
+    summary: 'p, .excerpt, .summary, .description',
+    date: '.date, .time, time, .published'
+  };
+
+  try {
+    $(selectors.container).each((i, element) => {
+      if (i >= 10) return false;
+      
+      const $element = $(element);
+      const $titleElement = $element.find(selectors.title).first();
+      const $linkElement = $titleElement.find('a').length ? $titleElement.find('a').first() : $element.find(selectors.link).first();
+      
+      const title = $titleElement.text().trim();
+      const link = $linkElement.attr('href');
+      const summary = $element.find(selectors.summary).first().text().trim();
+      const publishedAt = $element.find(selectors.date).first().text().trim() || 'Recently';
+
+      if (title && link) {
+        articles.push({
+          title,
+          link: link.startsWith('http') ? link : new URL(link, sourceConfig.url).href,
+          summary: summary || 'No summary available',
+          source: sourceConfig.name,
+          category: sourceConfig.category,
+          publishedAt,
+          scraped: new Date().toISOString()
+        });
+      }
+    });
+  } catch (error) {
+    console.error(`Error with generic scraper for ${sourceConfig.name}:`, error.message);
+  }
+
+  return articles;
+}
+
 function generateAISummary(article) {
   const { title, summary } = article;
   
@@ -201,10 +340,14 @@ function generateAISummary(article) {
 }
 
 async function getAllNews() {
+  // Load dynamic sources from configuration file
+  const dynamicSources = await loadDynamicSources();
   const allArticles = [];
   let successfulSources = 0;
   
-  for (const source of newsSources) {
+  console.log(`Loading ${dynamicSources.length} active sources from configuration...`);
+  
+  for (const source of dynamicSources) {
     try {
       console.log(`Scraping ${source.name}...`);
       const articles = await source.scraper();
@@ -218,11 +361,21 @@ async function getAllNews() {
         allArticles.push(...articlesWithSummaries);
         successfulSources++;
         console.log(`Found ${articles.length} articles from ${source.name}`);
+        
+        // Update source statistics in configuration if we have the original source data
+        if (source.source) {
+          await updateSourceStats(source.source.id, articles.length);
+        }
       } else {
         console.warn(`No articles found from ${source.name}`);
       }
     } catch (error) {
       console.error(`Error scraping ${source.name}:`, error.message);
+      
+      // Update source as having failed if we have the original source data
+      if (source.source) {
+        await updateSourceStats(source.source.id, 0, error.message);
+      }
     }
   }
   
@@ -230,11 +383,31 @@ async function getAllNews() {
     throw new Error(`Failed to fetch news from all sources. Check network connection and source availability.`);
   }
   
-  console.log(`Successfully scraped ${successfulSources}/${newsSources.length} sources with ${allArticles.length} total articles`);
+  console.log(`Successfully scraped ${successfulSources}/${dynamicSources.length} sources with ${allArticles.length} total articles`);
   return allArticles.sort((a, b) => new Date(b.scraped) - new Date(a.scraped));
+}
+
+// Update source statistics after scraping
+async function updateSourceStats(sourceId, articleCount, error = null) {
+  try {
+    const data = await fs.readFile(SOURCES_FILE, 'utf8');
+    const sources = JSON.parse(data);
+    
+    const sourceIndex = sources.findIndex(s => s.id === sourceId);
+    if (sourceIndex !== -1) {
+      sources[sourceIndex].articleCount = articleCount;
+      sources[sourceIndex].lastSuccess = error ? sources[sourceIndex].lastSuccess : new Date().toISOString();
+      sources[sourceIndex].lastError = error || null;
+      sources[sourceIndex].lastAttempt = new Date().toISOString();
+      
+      await fs.writeFile(SOURCES_FILE, JSON.stringify(sources, null, 2));
+    }
+  } catch (err) {
+    console.error('Error updating source stats:', err.message);
+  }
 }
 
 module.exports = {
   getAllNews,
-  newsSources
+  loadDynamicSources
 };

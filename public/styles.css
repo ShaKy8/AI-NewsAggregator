@@ -196,6 +196,46 @@ body.dark-theme .search-input::placeholder {
     font-weight: 600;
 }
 
+.architecture-btn {
+    width: auto !important;
+    padding: 8px 15px !important;
+    border-radius: 20px !important;
+    font-weight: 500;
+    text-decoration: none;
+    display: flex !important;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #4ecdc4, #44a08d) !important;
+    color: white !important;
+    font-size: 0.85rem;
+}
+
+.architecture-btn:hover {
+    background: linear-gradient(135deg, #44a08d, #4ecdc4) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(78, 205, 196, 0.3);
+}
+
+.admin-btn {
+    width: auto !important;
+    padding: 8px 15px !important;
+    border-radius: 20px !important;
+    font-weight: 500;
+    text-decoration: none;
+    display: flex !important;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #ff6b6b, #ee5a24) !important;
+    color: white !important;
+    font-size: 0.85rem;
+}
+
+.admin-btn:hover {
+    background: linear-gradient(135deg, #ee5a24, #ff6b6b) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.3);
+}
+
 .refresh-section {
     display: flex;
     flex-direction: column;

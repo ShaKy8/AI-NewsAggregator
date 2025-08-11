@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberTech News Aggregator - Architecture</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+
+        .header {
+            padding: 20px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-btn.active {
+            background: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .diagram-container {
+            width: 100%;
+            height: calc(100vh - 200px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50px;
+            padding: 12px 20px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .node {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .node:hover .node-circle {
+            transform: scale(1.05);
+            filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.3));
+        }
+        
+        .node:hover .node-text {
+            font-weight: 700;
+        }
+
+        .node-circle {
+            fill: rgba(255, 255, 255, 0.9);
+            stroke: rgba(255, 255, 255, 0.3);
+            stroke-width: 2;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+        }
+
+        .node-text {
+            fill: #333;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            font-weight: 600;
+            font-size: 14px;
+            pointer-events: none;
+        }
+
+        .node-icon {
+            fill: #667eea;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            font-size: 20px;
+            pointer-events: none;
+        }
+
+        .link {
+            stroke: rgba(255, 255, 255, 0.6);
+            stroke-width: 2;
+            fill: none;
+            opacity: 0.8;
+            transition: all 0.3s ease;
+        }
+
+        .link.active {
+            stroke: #fff;
+            stroke-width: 3;
+            opacity: 1;
+        }
+
+        .link-label {
+            fill: white;
+            text-anchor: middle;
+            font-size: 12px;
+            font-weight: 500;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            max-width: 300px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .tooltip h3 {
+            margin-bottom: 8px;
+            color: #67eea;
+        }
+
+
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+        }
+
+        .info-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 300px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transform: translateX(320px);
+            transition: transform 0.3s ease;
+        }
+
+        .info-panel.active {
+            transform: translateX(0);
+        }
+
+        .info-panel h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-btn">
+        <i class="fas fa-arrow-left"></i>
+        Back to News
+    </a>
+
+    <div class="header">
+        <h1><i class="fas fa-sitemap"></i> System Architecture</h1>
+        <p>Interactive visualization of the CyberTech News Aggregator system</p>
+    </div>
+
+    <div class="controls">
+        <button class="control-btn active" onclick="autoArrange()">
+            <i class="fas fa-th"></i>
+            Auto-Arrange
+        </button>
+        <button class="control-btn" onclick="resetView()">
+            <i class="fas fa-refresh"></i>
+            Reset View
+        </button>
+        <button class="control-btn" onclick="fitToScreen()">
+            <i class="fas fa-expand-arrows-alt"></i>
+            Fit to Screen
+        </button>
+    </div>
+
+    <div class="diagram-container">
+        <svg id="architecture-svg"></svg>
+        
+        <div class="tooltip" id="tooltip"></div>
+        
+        <div class="info-panel" id="info-panel">
+            <h3>Component Details</h3>
+            <div id="component-info">
+                Click on any component to see detailed information about its role in the system.
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #667eea;"></div>
+                <span>Frontend Layer</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #764ba2;"></div>
+                <span>Backend Layer</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #f093fb;"></div>
+                <span>Data Sources</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #4ecdc4;"></div>
+                <span>External APIs</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const architectureData = {
+            nodes: [
+                // Frontend Layer
+                { id: 'browser', name: 'Web Browser', layer: 'frontend', type: 'ui', x: 400, y: 100, icon: '🌐' },
+                { id: 'html', name: 'HTML/CSS', layer: 'frontend', type: 'ui', x: 250, y: 150, icon: '🎨' },
+                { id: 'js-app', name: 'JavaScript App', layer: 'frontend', type: 'logic', x: 550, y: 150, icon: '⚡' },
+                
+                // Backend Layer
+                { id: 'express', name: 'Express Server', layer: 'backend', type: 'server', x: 400, y: 300, icon: '🔧' },
+                { id: 'news-service', name: 'News Service', layer: 'backend', type: 'service', x: 400, y: 400, icon: '📰' },
+                { id: 'cache', name: 'In-Memory Cache', layer: 'backend', type: 'storage', x: 600, y: 300, icon: '💾' },
+                { id: 'cron', name: 'Cron Scheduler', layer: 'backend', type: 'scheduler', x: 200, y: 400, icon: '⏰' },
+                
+                // Data Sources
+                { id: 'bleeping', name: 'BleepingComputer', layer: 'external', type: 'source', x: 150, y: 550, icon: '🔒' },
+                { id: 'cybersec', name: 'Cybersecurity News', layer: 'external', type: 'source', x: 300, y: 580, icon: '🛡️' },
+                { id: 'neowin', name: 'Neowin', layer: 'external', type: 'source', x: 500, y: 580, icon: '💻' },
+                { id: 'askwoody', name: 'AskWoody', layer: 'external', type: 'source', x: 650, y: 550, icon: '🔍' },
+                
+                // Processing Components
+                { id: 'scraper', name: 'Web Scraper', layer: 'backend', type: 'processor', x: 400, y: 500, icon: '🕷️' },
+                { id: 'ai-summary', name: 'AI Summary Generator', layer: 'backend', type: 'processor', x: 600, y: 450, icon: '🤖' }
+            ],
+            links: [
+                // Frontend connections
+                { source: 'browser', target: 'html', type: 'renders', label: 'Renders' },
+                { source: 'browser', target: 'js-app', type: 'executes', label: 'Executes' },
+                { source: 'js-app', target: 'express', type: 'api', label: 'API Calls' },
+                
+                // Backend connections
+                { source: 'express', target: 'news-service', type: 'service', label: 'Service Layer' },
+                { source: 'express', target: 'cache', type: 'cache', label: 'Cache Access' },
+                { source: 'news-service', target: 'scraper', type: 'process', label: 'Scraping' },
+                { source: 'scraper', target: 'ai-summary', type: 'process', label: 'Processing' },
+                { source: 'cron', target: 'news-service', type: 'trigger', label: 'Scheduled Refresh' },
+                
+                // External sources
+                { source: 'scraper', target: 'bleeping', type: 'fetch', label: 'HTTP Request' },
+                { source: 'scraper', target: 'cybersec', type: 'fetch', label: 'HTTP Request' },
+                { source: 'scraper', target: 'neowin', type: 'fetch', label: 'HTTP Request' },
+                { source: 'scraper', target: 'askwoody', type: 'fetch', label: 'HTTP Request' }
+            ]
+        };
+
+        const componentDetails = {
+            'browser': {
+                title: 'Web Browser',
+                description: 'User interface layer where users interact with the news aggregator',
+                tech: 'HTML5, CSS3, JavaScript ES6+',
+                features: ['Responsive Design', 'Dark Theme', 'Real-time Updates', 'Local Storage']
+            },
+            'html': {
+                title: 'HTML/CSS Frontend',
+                description: 'Static assets and styling for the user interface',
+                tech: 'HTML5, CSS3, Font Awesome, Google Fonts',
+                features: ['Mobile Responsive', 'Modern Design', 'Icon Library', 'Custom Fonts']
+            },
+            'js-app': {
+                title: 'JavaScript Application',
+                description: 'Client-side application logic and user interaction handling',
+                tech: 'Vanilla JavaScript, ES6+, Local Storage API',
+                features: ['News Filtering', 'Search Functionality', 'Theme Toggle', 'Article Bookmarking']
+            },
+            'express': {
+                title: 'Express.js Server',
+                description: 'Web server handling HTTP requests and serving the application',
+                tech: 'Node.js, Express.js, CORS, Static File Serving',
+                features: ['REST API Endpoints', 'Static File Serving', 'Error Handling', 'CORS Support']
+            },
+            'news-service': {
+                title: 'News Service',
+                description: 'Core business logic for news aggregation and processing',
+                tech: 'Node.js, Axios, Cheerio',
+                features: ['Multi-source Scraping', 'Article Processing', 'Error Handling', 'Content Validation']
+            },
+            'cache': {
+                title: 'In-Memory Cache',
+                description: 'Temporary storage for scraped articles to improve performance',
+                tech: 'JavaScript Objects, Memory Management',
+                features: ['Fast Access', 'Automatic Refresh', 'Memory Efficient', 'Data Persistence']
+            },
+            'cron': {
+                title: 'Cron Scheduler',
+                description: 'Automated task scheduler for periodic news updates',
+                tech: 'node-cron, Background Processing',
+                features: ['Scheduled Tasks', 'Error Recovery', 'Background Processing', 'Configurable Intervals']
+            },
+            'scraper': {
+                title: 'Web Scraper',
+                description: 'Component responsible for extracting news data from external sources',
+                tech: 'Cheerio, Axios, DOM Parsing',
+                features: ['Multi-site Support', 'Content Extraction', 'Error Handling', 'Rate Limiting']
+            },
+            'ai-summary': {
+                title: 'AI Summary Generator',
+                description: 'Intelligent content processor that generates article summaries',
+                tech: 'Natural Language Processing, Pattern Matching',
+                features: ['Keyword Detection', 'Content Summarization', 'Category Classification', 'Smart Previews']
+            },
+            'bleeping': {
+                title: 'BleepingComputer',
+                description: 'Cybersecurity news source specializing in security threats and vulnerabilities',
+                tech: 'External Website, RSS/HTML Scraping',
+                features: ['Security Focus', 'Breaking News', 'Technical Details', 'Expert Analysis']
+            },
+            'cybersec': {
+                title: 'Cybersecurity News',
+                description: 'Dedicated cybersecurity publication with latest threat intelligence',
+                tech: 'External Website, Content API',
+                features: ['Threat Intelligence', 'Industry News', 'Security Advisories', 'Research Reports']
+            },
+            'neowin': {
+                title: 'Neowin',
+                description: 'Technology news source covering software, hardware, and industry trends',
+                tech: 'External Website, Web Scraping',
+                features: ['Tech Industry News', 'Product Reviews', 'Software Updates', 'Hardware Releases']
+            },
+            'askwoody': {
+                title: 'AskWoody',
+                description: 'Technology advice and news platform focusing on Windows and software',
+                tech: 'External Website, Content Extraction',
+                features: ['Windows Updates', 'Software Advice', 'Community Insights', 'Technical Support']
+            }
+        };
+
+        let svg, simulation, node, link, linkLabel;
+        let currentView = 'default';
+        let isDragging = false;
+        let dragStartPos = { x: 0, y: 0 };
+        const DRAG_THRESHOLD = 5; // pixels
+        let stabilizationTimer = null;
+        let width, height;
+        const PADDING = 50; // pixels padding from edges
+
+        // Custom boundary force to keep nodes within viewport
+        function boundaryForce() {
+            for (let node of architectureData.nodes) {
+                const radius = getNodeRadius(node.type);
+                
+                // Left boundary
+                if (node.x < PADDING + radius) {
+                    node.x = PADDING + radius;
+                    node.vx = Math.abs(node.vx) * 0.5; // Bounce back gently
+                }
+                // Right boundary  
+                if (node.x > width - PADDING - radius) {
+                    node.x = width - PADDING - radius;
+                    node.vx = -Math.abs(node.vx) * 0.5;
+                }
+                // Top boundary
+                if (node.y < PADDING + radius) {
+                    node.y = PADDING + radius;
+                    node.vy = Math.abs(node.vy) * 0.5;
+                }
+                // Bottom boundary
+                if (node.y > height - PADDING - radius) {
+                    node.y = height - PADDING - radius;
+                    node.vy = -Math.abs(node.vy) * 0.5;
+                }
+            }
+        }
+
+        function initializeDiagram() {
+            const container = document.querySelector('.diagram-container');
+            width = container.clientWidth;
+            height = container.clientHeight;
+
+            svg = d3.select('#architecture-svg')
+                .attr('width', width)
+                .attr('height', height);
+
+            // Create arrow markers
+            svg.append('defs').selectAll('marker')
+                .data(['end'])
+                .enter().append('marker')
+                .attr('id', String)
+                .attr('viewBox', '0 -5 10 10')
+                .attr('refX', 25)
+                .attr('refY', 0)
+                .attr('markerWidth', 6)
+                .attr('markerHeight', 6)
+                .attr('orient', 'auto')
+                .append('path')
+                .attr('d', 'M0,-5L10,0L0,5')
+                .attr('fill', 'rgba(255, 255, 255, 0.8)');
+
+            createVisualization();
+        }
+
+        function createVisualization() {
+            const width = svg.attr('width');
+            const height = svg.attr('height');
+
+            // Clear previous visualization
+            svg.selectAll('*').remove();
+
+            // Recreate arrow markers
+            svg.append('defs').selectAll('marker')
+                .data(['end'])
+                .enter().append('marker')
+                .attr('id', String)
+                .attr('viewBox', '0 -5 10 10')
+                .attr('refX', 25)
+                .attr('refY', 0)
+                .attr('markerWidth', 6)
+                .attr('markerHeight', 6)
+                .attr('orient', 'auto')
+                .append('path')
+                .attr('d', 'M0,-5L10,0L0,5')
+                .attr('fill', 'rgba(255, 255, 255, 0.8)');
+
+            // Create links
+            link = svg.append('g')
+                .selectAll('.link')
+                .data(architectureData.links)
+                .enter().append('path')
+                .attr('class', d => `link ${d.type}`)
+                .attr('marker-end', 'url(#end)')
+                .style('stroke', d => getLinkColor(d.type));
+
+            // Create link labels
+            linkLabel = svg.append('g')
+                .selectAll('.link-label')
+                .data(architectureData.links)
+                .enter().append('text')
+                .attr('class', 'link-label')
+                .text(d => d.label);
+
+            // Create nodes
+            node = svg.append('g')
+                .selectAll('.node')
+                .data(architectureData.nodes)
+                .enter().append('g')
+                .attr('class', 'node')
+                .call(d3.drag()
+                    .on('start', dragstarted)
+                    .on('drag', dragged)
+                    .on('end', dragended));
+
+            node.append('circle')
+                .attr('class', 'node-circle')
+                .attr('r', d => getNodeRadius(d.type))
+                .style('fill', d => getNodeColor(d.layer));
+
+            node.append('text')
+                .attr('class', 'node-icon')
+                .attr('dy', -10)
+                .text(d => d.icon);
+
+            node.append('text')
+                .attr('class', 'node-text')
+                .attr('dy', 15)
+                .text(d => d.name);
+
+            // Add event listeners
+            node.on('mouseover', showTooltip)
+                .on('mouseout', hideTooltip)
+                .on('click', showComponentInfo);
+
+            // Create force simulation with balanced forces and boundaries
+            simulation = d3.forceSimulation(architectureData.nodes)
+                .force('link', d3.forceLink(architectureData.links).id(d => d.id).distance(120))
+                .force('charge', d3.forceManyBody().strength(-200))
+                .force('center', d3.forceCenter(width / 2, height / 2).strength(0.1))
+                .force('collision', d3.forceCollide().radius(d => getNodeRadius(d.type) + 15))
+                .force('boundary', boundaryForce)  // Custom boundary force
+                .alphaDecay(0.02)    // Moderate decay
+                .velocityDecay(0.3)  // Good friction without being too sticky
+                .alpha(1.0);
+
+            simulation.on('tick', () => {
+                boundaryForce(); // Apply boundary constraints on every tick
+                ticked();
+            });
+            
+            // Auto-stabilize after initial layout
+            setTimeout(() => {
+                simulation.alphaTarget(0);
+                
+                // Fix nodes after they settle, then fit to screen
+                setTimeout(() => {
+                    architectureData.nodes.forEach(d => {
+                        d.fx = d.x;
+                        d.fy = d.y;
+                    });
+                    console.log('Initial layout stabilized');
+                    
+                    // Automatically fit to screen after initial layout
+                    setTimeout(() => {
+                        fitToScreen();
+                    }, 500);
+                }, 1000);
+            }, 3000);
+        }
+
+        function ticked() {
+            link.attr('d', d => {
+                const dx = d.target.x - d.source.x;
+                const dy = d.target.y - d.source.y;
+                const dr = Math.sqrt(dx * dx + dy * dy) * 1.5;
+                return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
+            });
+
+            linkLabel
+                .attr('x', d => (d.source.x + d.target.x) / 2)
+                .attr('y', d => (d.source.y + d.target.y) / 2);
+
+            node.attr('transform', d => `translate(${d.x},${d.y})`);
+        }
+
+        function getNodeColor(layer) {
+            const colors = {
+                'frontend': '#667eea',
+                'backend': '#764ba2',
+                'external': '#f093fb',
+                'api': '#4ecdc4'
+            };
+            return colors[layer] || '#888';
+        }
+
+        function getNodeRadius(type) {
+            const sizes = {
+                'ui': 35,
+                'server': 40,
+                'service': 35,
+                'storage': 30,
+                'processor': 35,
+                'scheduler': 30,
+                'source': 25
+            };
+            return sizes[type] || 30;
+        }
+
+        function getLinkColor(type) {
+            const colors = {
+                'api': '#667eea',
+                'service': '#764ba2',
+                'process': '#f093fb',
+                'fetch': '#4ecdc4',
+                'cache': '#ff9f43',
+                'trigger': '#ee5a52'
+            };
+            return colors[type] || 'rgba(255, 255, 255, 0.6)';
+        }
+
+        function showTooltip(event, d) {
+            const tooltip = document.getElementById('tooltip');
+            const details = componentDetails[d.id];
+            
+            tooltip.innerHTML = `
+                <h3>${d.name}</h3>
+                <p><strong>Layer:</strong> ${d.layer}</p>
+                <p><strong>Type:</strong> ${d.type}</p>
+                ${details ? `<p>${details.description}</p>` : ''}
+            `;
+            
+            tooltip.style.left = (event.pageX + 10) + 'px';
+            tooltip.style.top = (event.pageY - 10) + 'px';
+            tooltip.style.opacity = 1;
+        }
+
+        function hideTooltip() {
+            document.getElementById('tooltip').style.opacity = 0;
+        }
+
+        function showComponentInfo(event, d) {
+            const panel = document.getElementById('info-panel');
+            const info = document.getElementById('component-info');
+            const details = componentDetails[d.id];
+            
+            if (details) {
+                info.innerHTML = `
+                    <h4>${details.title}</h4>
+                    <p><strong>Description:</strong> ${details.description}</p>
+                    <p><strong>Technology:</strong> ${details.tech}</p>
+                    <p><strong>Key Features:</strong></p>
+                    <ul>
+                        ${details.features.map(feature => `<li>${feature}</li>`).join('')}
+                    </ul>
+                `;
+                panel.classList.add('active');
+            }
+        }
+
+        function autoArrange() {
+            setActiveButton(0);
+            currentView = 'auto-arranged';
+            
+            // Implement smart hierarchical arrangement
+            const layers = {
+                'frontend': { y: height * 0.2, nodes: [] },
+                'backend': { y: height * 0.5, nodes: [] },
+                'external': { y: height * 0.8, nodes: [] }
+            };
+            
+            // Group nodes by layer
+            architectureData.nodes.forEach(d => {
+                if (layers[d.layer]) {
+                    layers[d.layer].nodes.push(d);
+                } else {
+                    layers['backend'].nodes.push(d); // Default to backend
+                }
+            });
+            
+            // Arrange nodes in each layer
+            Object.keys(layers).forEach(layerName => {
+                const layer = layers[layerName];
+                const nodeCount = layer.nodes.length;
+                const startX = (width - (nodeCount - 1) * 120) / 2; // Center horizontally
+                
+                layer.nodes.forEach((d, i) => {
+                    const targetX = Math.max(PADDING + 50, Math.min(width - PADDING - 50, startX + i * 120));
+                    const targetY = layer.y;
+                    
+                    // Update position data immediately for link calculations
+                    d.x = targetX;
+                    d.y = targetY;
+                    d.fx = targetX;
+                    d.fy = targetY;
+                    
+                    // Animate to new position
+                    const nodeElement = node.nodes().find(n => n.__data__.id === d.id);
+                    if (nodeElement) {
+                        d3.select(nodeElement)
+                            .transition()
+                            .duration(1200)
+                            .ease(d3.easeCubicInOut)
+                            .attr('transform', `translate(${targetX},${targetY})`);
+                    }
+                });
+            });
+            
+            // Update links with smooth animation (can start immediately now)
+            setTimeout(() => {
+                link.transition().duration(1000).attr('d', d => {
+                    const dx = d.target.x - d.source.x;
+                    const dy = d.target.y - d.source.y;
+                    const dr = Math.sqrt(dx * dx + dy * dy) * 1.2; // Slightly less curved
+                    return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
+                });
+                
+                linkLabel.transition().duration(1000)
+                    .attr('x', d => (d.source.x + d.target.x) / 2)
+                    .attr('y', d => (d.source.y + d.target.y) / 2);
+            }, 100); // Reduced delay since positions are updated immediately
+            
+            console.log('Auto-arranged nodes in hierarchical layout');
+        }
+
+        function resetView() {
+            setActiveButton(1); // Updated index for new button layout
+            currentView = 'default';
+            document.getElementById('info-panel').classList.remove('active');
+            
+            // Remove any custom force positioning
+            simulation.force('x', null);
+            
+            // Let nodes settle into natural force-directed positions
+            simulation.alpha(0.2).restart();
+            
+            // Stop simulation after settling
+            setTimeout(() => {
+                simulation.alphaTarget(0);
+                architectureData.nodes.forEach(d => {
+                    d.fx = d.x;
+                    d.fy = d.y;
+                });
+            }, 2000);
+        }
+
+        function fitToScreen() {
+            // Calculate bounding box of all nodes
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            
+            architectureData.nodes.forEach(d => {
+                const radius = getNodeRadius(d.type);
+                minX = Math.min(minX, d.x - radius);
+                maxX = Math.max(maxX, d.x + radius);
+                minY = Math.min(minY, d.y - radius);
+                maxY = Math.max(maxY, d.y + radius);
+            });
+            
+            // Calculate current bounds and available space
+            const currentWidth = maxX - minX;
+            const currentHeight = maxY - minY;
+            const availableWidth = width - (2 * PADDING);
+            const availableHeight = height - (2 * PADDING);
+            
+            // Calculate scale and translation
+            const scaleX = availableWidth / currentWidth;
+            const scaleY = availableHeight / currentHeight;
+            const scale = Math.min(scaleX, scaleY, 1.0); // Don't scale up, only down if needed
+            
+            const centerX = (minX + maxX) / 2;
+            const centerY = (minY + maxY) / 2;
+            const targetCenterX = width / 2;
+            const targetCenterY = height / 2;
+            
+            // Apply transformation to all nodes
+            architectureData.nodes.forEach(d => {
+                // Scale and center
+                const newX = ((d.x - centerX) * scale) + targetCenterX;
+                const newY = ((d.y - centerY) * scale) + targetCenterY;
+                
+                // Animate to new position
+                const nodeElement = node.nodes().find(n => n.__data__.id === d.id);
+                if (nodeElement) {
+                    d3.select(nodeElement)
+                        .transition()
+                        .duration(1000)
+                        .attr('transform', `translate(${newX},${newY})`)
+                        .on('end', () => {
+                            d.x = newX;
+                            d.y = newY;
+                            d.fx = newX;
+                            d.fy = newY;
+                        });
+                }
+            });
+            
+            // Update links with smooth transition
+            setTimeout(() => {
+                link.transition().duration(800).attr('d', d => {
+                    const dx = d.target.x - d.source.x;
+                    const dy = d.target.y - d.source.y;
+                    const dr = Math.sqrt(dx * dx + dy * dy) * 1.5;
+                    return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
+                });
+                
+                linkLabel.transition().duration(800)
+                    .attr('x', d => (d.source.x + d.target.x) / 2)
+                    .attr('y', d => (d.source.y + d.target.y) / 2);
+            }, 200);
+            
+            console.log('Fitted all nodes to screen');
+        }
+
+        function setActiveButton(index) {
+            document.querySelectorAll('.control-btn').forEach((btn, i) => {
+                btn.classList.toggle('active', i === index);
+            });
+        }
+
+        function dragstarted(event, d) {
+            // Record starting position for click/drag detection
+            dragStartPos.x = event.x;
+            dragStartPos.y = event.y;
+            isDragging = false;
+            
+            // Keep simulation very calm during interaction
+            if (!event.active) simulation.alphaTarget(0.01).restart();
+            
+            // Fix node position
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        function dragged(event, d) {
+            // Calculate distance moved
+            const dx = event.x - dragStartPos.x;
+            const dy = event.y - dragStartPos.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            // Only consider it a real drag if moved beyond threshold
+            if (distance > DRAG_THRESHOLD) {
+                isDragging = true;
+            }
+            
+            // Update position if dragging with boundary constraints
+            if (isDragging) {
+                const radius = getNodeRadius(d.type);
+                
+                // Constrain to viewport boundaries
+                let newX = Math.max(PADDING + radius, Math.min(width - PADDING - radius, event.x));
+                let newY = Math.max(PADDING + radius, Math.min(height - PADDING - radius, event.y));
+                
+                d.fx = newX;
+                d.fy = newY;
+                d.x = newX;
+                d.y = newY;
+            }
+        }
+
+        function dragended(event, d) {
+            // Stop simulation movement
+            if (!event.active) simulation.alphaTarget(0);
+            
+            // Keep node in final position if it was dragged
+            if (isDragging) {
+                d.fx = d.x;
+                d.fy = d.y;
+            } else {
+                // If it was just a click, keep it stable
+                d.fx = d.x;
+                d.fy = d.y;
+            }
+            
+            // Reset state
+            isDragging = false;
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', initializeDiagram);
+        window.addEventListener('resize', initializeDiagram);
+    </script>
+</body>
+</html>

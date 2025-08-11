@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Sources Admin - CyberTech Aggregator</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .nav-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .sources-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .sources-table th,
+        .sources-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .sources-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-testing {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            opacity: 0.9;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            margin: 5% auto;
+            padding: 25px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+            margin-left: auto;
+        }
+
+        @media (max-width: 768px) {
+            .admin-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <i class="fas fa-cogs"></i>
+                News Sources Administration
+            </h1>
+            <p>Manage news sources, monitor performance, and configure scraping settings</p>
+            
+            <div class="nav-buttons">
+                <a href="/" class="nav-btn">
+                    <i class="fas fa-home"></i>
+                    Back to News
+                </a>
+                <a href="/architecture.html" class="nav-btn">
+                    <i class="fas fa-sitemap"></i>
+                    Architecture
+                </a>
+            </div>
+        </div>
+
+        <div class="admin-grid">
+            <div class="card">
+                <h2>
+                    <i class="fas fa-list"></i>
+                    Active News Sources
+                </h2>
+                
+                <div class="alert alert-success" id="successAlert"></div>
+                <div class="alert alert-danger" id="errorAlert"></div>
+                
+                <div class="loading" id="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Loading sources...
+                </div>
+
+                <table class="sources-table" id="sourcesTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Articles</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sourcesTableBody">
+                        <!-- Sources will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div>
+                <div class="card">
+                    <h2>
+                        <i class="fas fa-chart-bar"></i>
+                        Statistics
+                    </h2>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <span class="stat-number" id="totalSources">0</span>
+                            <span class="stat-label">Total Sources</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-number" id="activeSources">0</span>
+                            <span class="stat-label">Active Sources</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-number" id="totalArticles">0</span>
+                            <span class="stat-label">Total Articles</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-number" id="lastRefresh">--</span>
+                            <span class="stat-label">Last Refresh</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>
+                        <i class="fas fa-plus-circle"></i>
+                        Add New Source
+                    </h2>
+                    
+                    <form id="addSourceForm">
+                        <div class="form-group">
+                            <label for="sourceName">Source Name</label>
+                            <input type="text" id="sourceName" class="form-control" placeholder="e.g., TechCrunch" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="sourceUrl">Base URL</label>
+                            <input type="url" id="sourceUrl" class="form-control" placeholder="https://example.com" required>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="sourceCategory">Category</label>
+                                <select id="sourceCategory" class="form-control" required>
+                                    <option value="">Select Category</option>
+                                    <option value="Cybersecurity">Cybersecurity</option>
+                                    <option value="Technology">Technology</option>
+                                    <option value="Business">Business</option>
+                                    <option value="Science">Science</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="sourceStatus">Status</label>
+                                <select id="sourceStatus" class="form-control">
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                    <option value="testing">Testing</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="sourceSelectors">CSS Selectors (JSON)</label>
+                            <textarea id="sourceSelectors" class="form-control" rows="3" 
+                                placeholder='{"title": ".title", "link": ".link", "summary": ".summary"}'></textarea>
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button type="button" class="btn btn-warning" onclick="testSource()">
+                                <i class="fas fa-flask"></i>
+                                Test Source
+                            </button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-plus"></i>
+                                Add Source
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Source Modal -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit"></i> Edit Source</h3>
+                <button class="close" onclick="closeEditModal()">&times;</button>
+            </div>
+            <form id="editSourceForm">
+                <input type="hidden" id="editSourceId">
+                
+                <div class="form-group">
+                    <label for="editSourceName">Source Name</label>
+                    <input type="text" id="editSourceName" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editSourceUrl">Base URL</label>
+                    <input type="url" id="editSourceUrl" class="form-control" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editSourceCategory">Category</label>
+                        <select id="editSourceCategory" class="form-control" required>
+                            <option value="Cybersecurity">Cybersecurity</option>
+                            <option value="Technology">Technology</option>
+                            <option value="Business">Business</option>
+                            <option value="Science">Science</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editSourceStatus">Status</label>
+                        <select id="editSourceStatus" class="form-control">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="testing">Testing</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button type="button" class="btn btn-warning" onclick="closeEditModal()">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save"></i>
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
