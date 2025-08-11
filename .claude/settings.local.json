@@ -16,7 +16,25 @@
       "Bash(sudo npm install:*)",
       "Bash(npx pm2 logs:*)",
       "Bash(node server.js)",
-      "Bash(git init:*)"
+      "Bash(git init:*)",
+      "Bash(git commit:*)",
+      "Bash(lsb_release:*)",
+      "Bash(snap install:*)",
+      "Bash(wget:*)",
+      "Bash(tar:*)",
+      "Bash(cp:*)",
+      "Bash(export PATH=\"$HOME/bin:$PATH\")",
+      "Bash(~/bin/gh:*)",
+      "Bash(git remote add:*)",
+      "Bash(git push:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(systemctl:*)",
+      "Bash(echo $USER)",
+      "Bash(kill:*)",
+      "Bash(sudo loginctl:*)",
+      "Bash(loginctl show-user:*)",
+      "Bash(git remote set-head:*)",
+      "Bash(find:*)"
     ],
     "deny": []
   }
