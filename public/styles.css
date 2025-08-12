@@ -342,11 +342,11 @@ body.dark-theme .search-input::placeholder {
 .stat-card {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
-    padding: 25px;
+    padding: 20px;
     border-radius: 15px;
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 12px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
     transition: transform 0.3s ease;
@@ -357,7 +357,7 @@ body.dark-theme .search-input::placeholder {
 }
 
 .stat-card i {
-    font-size: 2rem;
+    font-size: 1.3rem;
     background: linear-gradient(135deg, #667eea, #764ba2);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -365,7 +365,7 @@ body.dark-theme .search-input::placeholder {
 }
 
 .stat-number {
-    font-size: 1.8rem;
+    font-size: 1.3rem;
     font-weight: 700;
     color: #333;
     display: block;
@@ -376,6 +376,20 @@ body.dark-theme .search-input::placeholder {
     font-size: 0.9rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+}
+
+.source-icons {
+    display: flex;
+    gap: 4px;
+}
+
+.source-icons i {
+    font-size: 0.8rem;
+    opacity: 0.7;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .loading {

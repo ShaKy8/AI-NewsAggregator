@@ -18,6 +18,7 @@ class NewsAggregator {
         this.applyTheme();
         this.updateSavedCount();
         this.setupAutoRefresh();
+        this.updateSourcesCount();
         this.loadNews();
         this.loadDynamicSources();
     }
@@ -96,6 +97,7 @@ class NewsAggregator {
             progressFill.style.width = '100%';
             
             await this.loadNews();
+            this.updateSourcesCount();
             this.showNotification(`News refreshed successfully! Found ${result.count} articles.`);
         } catch (error) {
             console.error('Error refreshing news:', error);
@@ -292,6 +294,38 @@ class NewsAggregator {
             minute: '2-digit'
         });
         document.getElementById('lastUpdate').textContent = lastUpdate;
+    }
+
+    async updateSourcesCount() {
+        try {
+            const response = await fetch('/api/sources');
+            if (response.ok) {
+                const sources = await response.json();
+                const activeSources = sources.filter(source => source.status === 'active');
+                document.getElementById('totalSources').textContent = activeSources.length;
+                
+                // Update source icons with source-specific icons
+                const sourceIconsContainer = document.getElementById('sourceIcons');
+                const sourceIconMap = {
+                    'BleepingComputer': 'fas fa-bug',
+                    'Cybersecurity News': 'fas fa-shield-alt', 
+                    'Neowin': 'fas fa-window-maximize',
+                    'AskWoody': 'fas fa-question-circle',
+                    'TechCrunch': 'fas fa-rocket'
+                };
+                
+                const sourceIcons = activeSources.map(source => {
+                    const icon = sourceIconMap[source.name] || 'fas fa-globe';
+                    return `<i class="${icon}" title="${source.name}"></i>`;
+                }).join('');
+                sourceIconsContainer.innerHTML = sourceIcons;
+            }
+        } catch (error) {
+            console.error('Error updating sources count:', error);
+            // Fallback with source-specific icons
+            document.getElementById('totalSources').textContent = '5';
+            document.getElementById('sourceIcons').innerHTML = '<i class="fas fa-bug" title="BleepingComputer"></i><i class="fas fa-shield-alt" title="Cybersecurity News"></i><i class="fas fa-window-maximize" title="Neowin"></i><i class="fas fa-question-circle" title="AskWoody"></i><i class="fas fa-rocket" title="TechCrunch"></i>';
+        }
     }
 
     showLoading(show) {
