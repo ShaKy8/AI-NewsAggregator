@@ -6,10 +6,10 @@
     "category": "Cybersecurity",
     "status": "active",
     "articleCount": 10,
-    "lastSuccess": "2025-08-11T22:26:35.136Z",
+    "lastSuccess": "2025-08-12T17:00:01.753Z",
     "created": "2025-08-11T22:09:57.719Z",
     "lastError": null,
-    "lastAttempt": "2025-08-11T22:26:35.136Z"
+    "lastAttempt": "2025-08-12T17:00:01.753Z"
   },
   {
     "id": "2",
@@ -49,8 +49,104 @@
     "status": "active",
     "created": "2025-08-11T22:24:33.270Z",
     "articleCount": 1,
-    "lastSuccess": "2025-08-11T22:26:38.806Z",
+    "lastSuccess": "2025-08-12T17:00:03.709Z",
     "lastError": null,
-    "lastAttempt": "2025-08-11T22:26:38.806Z"
+    "lastAttempt": "2025-08-12T17:00:03.709Z"
+  },
+  {
+    "id": "6",
+    "name": "The Hacker News",
+    "url": "https://thehackernews.com/",
+    "category": "Cybersecurity",
+    "status": "active",
+    "created": "2025-08-12T15:00:00.000Z",
+    "articleCount": 0,
+    "lastSuccess": null,
+    "lastError": null,
+    "lastAttempt": null
+  },
+  {
+    "id": "7",
+    "name": "Dark Reading",
+    "url": "https://www.darkreading.com/",
+    "category": "Cybersecurity",
+    "status": "active",
+    "created": "2025-08-12T15:00:00.000Z",
+    "articleCount": 0,
+    "lastSuccess": null,
+    "lastError": null,
+    "lastAttempt": null
+  },
+  {
+    "id": "8",
+    "name": "SecurityWeek",
+    "url": "https://www.securityweek.com/",
+    "category": "Cybersecurity",
+    "status": "active",
+    "created": "2025-08-12T15:00:00.000Z",
+    "articleCount": 0,
+    "lastSuccess": null,
+    "lastError": null,
+    "lastAttempt": null
+  },
+  {
+    "id": "9",
+    "name": "Krebs on Security",
+    "url": "https://krebsonsecurity.com/",
+    "category": "Cybersecurity",
+    "status": "active",
+    "created": "2025-08-12T15:00:00.000Z",
+    "articleCount": 10,
+    "lastSuccess": "2025-08-12T17:00:04.711Z",
+    "lastError": null,
+    "lastAttempt": "2025-08-12T17:00:04.711Z"
+  },
+  {
+    "id": "10",
+    "name": "The Verge",
+    "url": "https://www.theverge.com/",
+    "category": "Technology",
+    "status": "active",
+    "created": "2025-08-12T15:00:00.000Z",
+    "articleCount": 0,
+    "lastSuccess": null,
+    "lastError": null,
+    "lastAttempt": null
+  },
+  {
+    "id": "11",
+    "name": "Ars Technica",
+    "url": "https://arstechnica.com/",
+    "category": "Technology",
+    "status": "active",
+    "created": "2025-08-12T15:00:00.000Z",
+    "articleCount": 10,
+    "lastSuccess": "2025-08-12T17:00:05.313Z",
+    "lastError": null,
+    "lastAttempt": "2025-08-12T17:00:05.313Z"
+  },
+  {
+    "id": "12",
+    "name": "Wired",
+    "url": "https://www.wired.com/",
+    "category": "Technology",
+    "status": "active",
+    "created": "2025-08-12T15:00:00.000Z",
+    "articleCount": 0,
+    "lastSuccess": null,
+    "lastError": null,
+    "lastAttempt": null
+  },
+  {
+    "id": "13",
+    "name": "Engadget",
+    "url": "https://www.engadget.com/",
+    "category": "Technology",
+    "status": "active",
+    "created": "2025-08-12T15:00:00.000Z",
+    "articleCount": 0,
+    "lastSuccess": null,
+    "lastError": null,
+    "lastAttempt": null
   }
 ]

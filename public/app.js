@@ -311,7 +311,15 @@ class NewsAggregator {
                     'Cybersecurity News': 'fas fa-shield-alt', 
                     'Neowin': 'fas fa-window-maximize',
                     'AskWoody': 'fas fa-question-circle',
-                    'TechCrunch': 'fas fa-rocket'
+                    'TechCrunch': 'fas fa-rocket',
+                    'The Hacker News': 'fas fa-user-secret',
+                    'Dark Reading': 'fas fa-eye',
+                    'SecurityWeek': 'fas fa-calendar-week',
+                    'Krebs on Security': 'fas fa-search',
+                    'The Verge': 'fas fa-border-all',
+                    'Ars Technica': 'fas fa-cogs',
+                    'Wired': 'fas fa-bolt',
+                    'Engadget': 'fas fa-mobile-alt'
                 };
                 
                 const sourceIcons = activeSources.map(source => {
@@ -323,8 +331,8 @@ class NewsAggregator {
         } catch (error) {
             console.error('Error updating sources count:', error);
             // Fallback with source-specific icons
-            document.getElementById('totalSources').textContent = '5';
-            document.getElementById('sourceIcons').innerHTML = '<i class="fas fa-bug" title="BleepingComputer"></i><i class="fas fa-shield-alt" title="Cybersecurity News"></i><i class="fas fa-window-maximize" title="Neowin"></i><i class="fas fa-question-circle" title="AskWoody"></i><i class="fas fa-rocket" title="TechCrunch"></i>';
+            document.getElementById('totalSources').textContent = '13';
+            document.getElementById('sourceIcons').innerHTML = '<i class="fas fa-bug" title="BleepingComputer"></i><i class="fas fa-shield-alt" title="Cybersecurity News"></i><i class="fas fa-window-maximize" title="Neowin"></i><i class="fas fa-question-circle" title="AskWoody"></i><i class="fas fa-rocket" title="TechCrunch"></i><i class="fas fa-user-secret" title="The Hacker News"></i><i class="fas fa-eye" title="Dark Reading"></i><i class="fas fa-calendar-week" title="SecurityWeek"></i><i class="fas fa-search" title="Krebs on Security"></i><i class="fas fa-border-all" title="The Verge"></i><i class="fas fa-cogs" title="Ars Technica"></i><i class="fas fa-bolt" title="Wired"></i><i class="fas fa-mobile-alt" title="Engadget"></i>';
         }
     }
 
