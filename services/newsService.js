@@ -319,6 +319,140 @@ async function scrapeGeneric(sourceConfig) {
   return articles;
 }
 
+// Normalize article title for better duplicate detection
+function normalizeTitle(title) {
+  return title
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+    .replace(/[^\w\s'-]/g, '') // Keep apostrophes and hyphens for better context
+    .substring(0, 150); // Increased limit for better comparison
+}
+
+// Deduplicate articles by title similarity and exact link matches
+function deduplicateArticles(articles) {
+  const seen = new Set();
+  const linksSeen = new Set();
+  const titlesSeen = new Map(); // Map to track similar titles across all sources
+  let duplicatesRemoved = 0;
+  
+  return articles.filter(article => {
+    // First, check for exact link duplicates (cross-source duplicates)
+    if (article.link && linksSeen.has(article.link)) {
+      console.log(`[DEDUP] Removed exact link duplicate: "${article.title}" from ${article.source}`);
+      duplicatesRemoved++;
+      return false;
+    }
+    
+    // Create a unique key based on normalized title and source
+    const normalizedTitle = normalizeTitle(article.title);
+    const sourceKey = `${normalizedTitle}::${article.source}`;
+    
+    // Check for exact duplicates from same source
+    if (seen.has(sourceKey)) {
+      console.log(`[DEDUP] Removed exact same-source duplicate: "${article.title}" from ${article.source}`);
+      duplicatesRemoved++;
+      return false;
+    }
+    
+    // Check for very similar titles from same source (95% similarity)
+    const sourcePrefix = `::${article.source}`;
+    for (const [existingKey, existingTitle] of titlesSeen) {
+      if (existingKey.endsWith(sourcePrefix)) {
+        const similarity = calculateTitleSimilarity(normalizedTitle, existingTitle);
+        if (similarity > 0.95) {
+          console.log(`[DEDUP] Removed similar same-source article (${Math.round(similarity*100)}% match): "${article.title}" from ${article.source}`);
+          duplicatesRemoved++;
+          return false;
+        }
+      }
+    }
+    
+    // NEW: Check for very similar titles from different sources (85% similarity)
+    for (const [existingKey, existingTitle] of titlesSeen) {
+      if (!existingKey.endsWith(sourcePrefix)) { // Different source
+        const similarity = calculateTitleSimilarity(normalizedTitle, existingTitle);
+        if (similarity > 0.85) {
+          // Additional check: compare summaries if available
+          const existingSource = existingKey.split('::')[1];
+          const existingArticle = articles.find(a => 
+            normalizeTitle(a.title) === existingTitle && a.source === existingSource
+          );
+          
+          if (existingArticle && article.summary && existingArticle.summary) {
+            const summaryNorm1 = normalizeTitle(article.summary);
+            const summaryNorm2 = normalizeTitle(existingArticle.summary);
+            const summarySimilarity = calculateTitleSimilarity(summaryNorm1, summaryNorm2);
+            
+            if (summarySimilarity > 0.7) {
+              console.log(`[DEDUP] Removed cross-source duplicate (${Math.round(similarity*100)}% title, ${Math.round(summarySimilarity*100)}% summary): "${article.title}" from ${article.source} (original from ${existingSource})`);
+              duplicatesRemoved++;
+              return false;
+            }
+          } else {
+            // No summaries to compare, rely on title similarity
+            console.log(`[DEDUP] Removed cross-source duplicate (${Math.round(similarity*100)}% title match): "${article.title}" from ${article.source} (original from ${existingKey.split('::')[1]})`);
+            duplicatesRemoved++;
+            return false;
+          }
+        }
+      }
+    }
+    
+    // Article is unique, add to tracking sets
+    seen.add(sourceKey);
+    if (article.link) {
+      linksSeen.add(article.link);
+    }
+    titlesSeen.set(sourceKey, normalizedTitle);
+    
+    return true;
+  });
+}
+
+// Calculate similarity between two titles (simple character-based similarity)
+function calculateTitleSimilarity(title1, title2) {
+  if (title1 === title2) return 1.0;
+  
+  const longer = title1.length > title2.length ? title1 : title2;
+  const shorter = title1.length > title2.length ? title2 : title1;
+  
+  if (longer.length === 0) return 1.0;
+  
+  // Calculate Levenshtein distance
+  const editDistance = levenshteinDistance(longer, shorter);
+  return (longer.length - editDistance) / longer.length;
+}
+
+// Simple Levenshtein distance calculation
+function levenshteinDistance(str1, str2) {
+  const matrix = [];
+  
+  for (let i = 0; i <= str2.length; i++) {
+    matrix[i] = [i];
+  }
+  
+  for (let j = 0; j <= str1.length; j++) {
+    matrix[0][j] = j;
+  }
+  
+  for (let i = 1; i <= str2.length; i++) {
+    for (let j = 1; j <= str1.length; j++) {
+      if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1, // substitution
+          matrix[i][j - 1] + 1,     // insertion
+          matrix[i - 1][j] + 1      // deletion
+        );
+      }
+    }
+  }
+  
+  return matrix[str2.length][str1.length];
+}
+
 function generateAISummary(article) {
   const { title, summary } = article;
   
@@ -383,8 +517,12 @@ async function getAllNews() {
     throw new Error(`Failed to fetch news from all sources. Check network connection and source availability.`);
   }
   
-  console.log(`Successfully scraped ${successfulSources}/${dynamicSources.length} sources with ${allArticles.length} total articles`);
-  return allArticles.sort((a, b) => new Date(b.scraped) - new Date(a.scraped));
+  // Deduplicate articles before returning
+  const deduplicatedArticles = deduplicateArticles(allArticles);
+  const duplicatesCount = allArticles.length - deduplicatedArticles.length;
+  
+  console.log(`Successfully scraped ${successfulSources}/${dynamicSources.length} sources with ${allArticles.length} total articles (${deduplicatedArticles.length} after deduplication, ${duplicatesCount} duplicates removed)`);
+  return deduplicatedArticles.sort((a, b) => new Date(b.scraped) - new Date(a.scraped));
 }
 
 // Update source statistics after scraping

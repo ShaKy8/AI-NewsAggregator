@@ -19,6 +19,7 @@ class NewsAggregator {
         this.updateSavedCount();
         this.setupAutoRefresh();
         this.updateSourcesCount();
+        this.startRealTimeClock();
         this.loadNews();
         this.loadDynamicSources();
     }
@@ -33,6 +34,7 @@ class NewsAggregator {
         document.getElementById('themeToggle').addEventListener('click', () => this.toggleTheme());
         document.getElementById('autoRefreshToggle').addEventListener('click', () => this.toggleAutoRefresh());
         document.getElementById('savedArticlesBtn').addEventListener('click', () => this.showSavedArticles());
+        document.getElementById('aboutBtn').addEventListener('click', () => this.showAboutModal());
         
         const searchInput = document.getElementById('searchInput');
         const clearSearch = document.getElementById('clearSearch');
@@ -399,7 +401,9 @@ class NewsAggregator {
     }
     
     generateId(article) {
-        return btoa(encodeURIComponent(article.title + article.source + article.scraped)).replace(/[^a-zA-Z0-9]/g, '').substring(0, 16);
+        // Use title + source + link for stable IDs that don't change on refresh
+        const uniqueString = article.title + article.source + (article.link || '');
+        return btoa(encodeURIComponent(uniqueString)).replace(/[^a-zA-Z0-9]/g, '').substring(0, 16);
     }
     
     applyCurrentFilters() {
@@ -598,22 +602,77 @@ class NewsAggregator {
     
     generateTrendingTopics() {
         const wordFreq = {};
-        const commonWords = ['the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can', 'do', 'does', 'did', 'a', 'an', 'this', 'that', 'these', 'those'];
+        
+        // Comprehensive stop words list
+        const commonWords = [
+            // Basic English stop words
+            'the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can', 'do', 'does', 'did', 'a', 'an', 'this', 'that', 'these', 'those',
+            // Additional common words causing issues
+            'more', 'from', 'about', 'than', 'also', 'into', 'over', 'after', 'under', 'through', 'during', 'before', 'between', 'up', 'down', 'out', 'off', 'above', 'below',
+            // Web/news specific terms
+            'comments', 'comment', 'article', 'news', 'read', 'reading', 'write', 'written', 'post', 'posted', 'share', 'shared', 'like', 'likes', 'view', 'views', 'click', 'clicks',
+            // Temporal words
+            'hours', 'hour', 'minutes', 'minute', 'days', 'day', 'weeks', 'week', 'months', 'month', 'years', 'year', 'today', 'yesterday', 'tomorrow', 'now', 'then', 'when', 'time', 'times',
+            // Action/state words
+            'said', 'says', 'saying', 'told', 'tell', 'telling', 'show', 'shows', 'showing', 'get', 'gets', 'getting', 'make', 'makes', 'making', 'take', 'takes', 'taking', 'using', 'used', 'use', 'uses',
+            // Generic descriptors
+            'very', 'much', 'many', 'some', 'any', 'all', 'most', 'few', 'little', 'big', 'small', 'large', 'good', 'bad', 'best', 'better', 'new', 'old', 'first', 'last', 'next', 'other', 'same', 'different'
+        ];
+        
+        // Tech/cybersecurity priority keywords (get score boost)
+        const priorityKeywords = [
+            'security', 'cyber', 'cybersecurity', 'malware', 'ransomware', 'phishing', 'breach', 'hack', 'hacker', 'vulnerability', 'exploit', 'patch', 'update', 'firewall',
+            'microsoft', 'windows', 'google', 'apple', 'android', 'linux', 'chrome', 'firefox', 'safari', 'edge',
+            'artificial', 'intelligence', 'machine', 'learning', 'blockchain', 'cryptocurrency', 'bitcoin', 'ethereum',
+            'cloud', 'server', 'database', 'network', 'encryption', 'password', 'authentication', 'privacy'
+        ];
         
         this.articles.forEach(article => {
             const text = (article.title + ' ' + (article.summary || '')).toLowerCase();
-            const words = text.match(/\b[a-z]{4,}\b/g) || [];
+            // Increase minimum word length to 5 to filter more noise
+            const words = text.match(/\b[a-z]{5,}\b/g) || [];
             
             words.forEach(word => {
                 if (!commonWords.includes(word)) {
-                    wordFreq[word] = (wordFreq[word] || 0) + 1;
+                    let score = 1;
+                    
+                    // Boost score for priority tech/cyber keywords
+                    if (priorityKeywords.includes(word)) {
+                        score = 3;
+                    }
+                    
+                    // Boost score for capitalized words in original text (proper nouns)
+                    const originalText = article.title + ' ' + (article.summary || '');
+                    const capitalizedPattern = new RegExp('\\b' + word.charAt(0).toUpperCase() + word.slice(1) + '\\b');
+                    if (capitalizedPattern.test(originalText)) {
+                        score *= 1.5;
+                    }
+                    
+                    wordFreq[word] = (wordFreq[word] || 0) + score;
                 }
             });
         });
         
-        this.trendingTopics = Object.entries(wordFreq)
+        // Filter out words that appear in too many articles (overly common)
+        const totalArticles = this.articles.length;
+        const filteredWordFreq = {};
+        
+        Object.entries(wordFreq).forEach(([word, freq]) => {
+            // Only include if word appears in less than 80% of articles OR is a priority keyword
+            const priorityKeywords = [
+                'security', 'cyber', 'cybersecurity', 'malware', 'ransomware', 'phishing', 'breach', 'hack', 'hacker', 'vulnerability', 'exploit', 'patch', 'update', 'firewall',
+                'microsoft', 'windows', 'google', 'apple', 'android', 'linux', 'chrome', 'firefox', 'safari', 'edge'
+            ];
+            
+            const articleAppearanceRate = freq / totalArticles;
+            if (articleAppearanceRate < 0.8 || priorityKeywords.includes(word)) {
+                filteredWordFreq[word] = freq;
+            }
+        });
+        
+        this.trendingTopics = Object.entries(filteredWordFreq)
             .sort(([,a], [,b]) => b - a)
-            .slice(0, 10)
+            .slice(0, 8)
             .map(([word, count]) => ({ word, count }));
             
         this.renderTrendingTopics();
@@ -695,6 +754,42 @@ class NewsAggregator {
             document.getElementById('dynamicSources').textContent = 'Sources: BleepingComputer, Cybersecurity News, Neowin, AskWoody';
         }
     }
+
+    startRealTimeClock() {
+        const updateClock = () => {
+            const now = new Date();
+            const time = now.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+            const date = now.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+            
+            document.getElementById('currentTime').textContent = time;
+            document.getElementById('currentDate').textContent = date;
+        };
+        
+        updateClock();
+        setInterval(updateClock, 1000);
+    }
+
+    showAboutModal() {
+        const modal = document.getElementById('aboutModal');
+        
+        // Update total processed articles count
+        const totalProcessed = document.getElementById('totalProcessed');
+        totalProcessed.textContent = this.articles.length > 0 ? `${this.articles.length}+` : 'Loading...';
+        
+        modal.style.display = 'flex';
+    }
+
+    closeAboutModal() {
+        document.getElementById('aboutModal').style.display = 'none';
+    }
 }
 
 const style = document.createElement('style');
@@ -722,6 +817,10 @@ window.refreshNews = function() {
 
 window.closeSavedModal = function() {
     window.newsAggregator.closeSavedModal();
+};
+
+window.closeAboutModal = function() {
+    window.newsAggregator.closeAboutModal();
 };
 
 document.addEventListener('DOMContentLoaded', () => {

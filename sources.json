@@ -6,10 +6,10 @@
     "category": "Cybersecurity",
     "status": "active",
     "articleCount": 10,
-    "lastSuccess": "2025-08-12T17:00:01.753Z",
+    "lastSuccess": "2025-08-13T15:14:55.229Z",
     "created": "2025-08-11T22:09:57.719Z",
     "lastError": null,
-    "lastAttempt": "2025-08-12T17:00:01.753Z"
+    "lastAttempt": "2025-08-13T15:14:55.229Z"
   },
   {
     "id": "2",
@@ -27,9 +27,11 @@
     "url": "https://www.neowin.net/",
     "category": "Technology",
     "status": "active",
-    "articleCount": 0,
-    "lastSuccess": null,
-    "created": "2025-08-11T22:09:57.719Z"
+    "articleCount": 10,
+    "lastSuccess": "2025-08-13T15:14:56.609Z",
+    "created": "2025-08-11T22:09:57.719Z",
+    "lastError": null,
+    "lastAttempt": "2025-08-13T15:14:56.609Z"
   },
   {
     "id": "4",
@@ -49,9 +51,9 @@
     "status": "active",
     "created": "2025-08-11T22:24:33.270Z",
     "articleCount": 1,
-    "lastSuccess": "2025-08-12T17:00:03.709Z",
+    "lastSuccess": "2025-08-13T15:14:57.878Z",
     "lastError": null,
-    "lastAttempt": "2025-08-12T17:00:03.709Z"
+    "lastAttempt": "2025-08-13T15:14:57.878Z"
   },
   {
     "id": "6",
@@ -97,9 +99,9 @@
     "status": "active",
     "created": "2025-08-12T15:00:00.000Z",
     "articleCount": 10,
-    "lastSuccess": "2025-08-12T17:00:04.711Z",
+    "lastSuccess": "2025-08-13T15:14:58.310Z",
     "lastError": null,
-    "lastAttempt": "2025-08-12T17:00:04.711Z"
+    "lastAttempt": "2025-08-13T15:14:58.310Z"
   },
   {
     "id": "10",
@@ -121,9 +123,9 @@
     "status": "active",
     "created": "2025-08-12T15:00:00.000Z",
     "articleCount": 10,
-    "lastSuccess": "2025-08-12T17:00:05.313Z",
+    "lastSuccess": "2025-08-13T15:14:58.939Z",
     "lastError": null,
-    "lastAttempt": "2025-08-12T17:00:05.313Z"
+    "lastAttempt": "2025-08-13T15:14:58.939Z"
   },
   {
     "id": "12",

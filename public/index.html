@@ -52,6 +52,10 @@
                             <i class="fas fa-cogs"></i>
                             <span>Admin</span>
                         </a>
+                        <button id="aboutBtn" class="control-btn about-btn" title="About CyberTech News">
+                            <i class="fas fa-info-circle"></i>
+                            <span>About</span>
+                        </button>
                     </div>
                     
                     <div class="refresh-section">
@@ -102,6 +106,13 @@
                 <div>
                     <span class="stat-number" id="lastUpdate">--</span>
                     <span class="stat-label">Last Update</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-calendar-day"></i>
+                <div>
+                    <span class="stat-number" id="currentTime">--:--</span>
+                    <span class="stat-label" id="currentDate">Loading...</span>
                 </div>
             </div>
         </div>
@@ -155,6 +166,85 @@
                 </button>
             </div>
             <div class="modal-body" id="savedArticlesList">
+            </div>
+        </div>
+    </div>
+
+    <div class="about-modal" id="aboutModal" style="display: none;">
+        <div class="modal-overlay" onclick="closeAboutModal()"></div>
+        <div class="modal-content about-modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-info-circle"></i> About CyberTech News</h3>
+                <button onclick="closeAboutModal()" class="close-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body about-modal-body">
+                <div class="about-section">
+                    <div class="app-logo">
+                        <svg width="48" height="48" viewBox="0 0 24 24" style="fill: currentColor;">
+                            <polygon points="12,2 18,5 18,11 12,14 6,11 6,5" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                            <polygon points="12,2 18,5 21,1 15,2 12,2" fill="none" stroke="currentColor" stroke-width="1"/>
+                            <polygon points="18,5 18,11 24,14 24,8 18,5" fill="none" stroke="currentColor" stroke-width="1"/>
+                            <polygon points="6,5 6,11 0,14 0,8 6,5" fill="none" stroke="currentColor" stroke-width="1"/>
+                        </svg>
+                    </div>
+                    <h4>CyberTech News Aggregator</h4>
+                    <p class="version">Version <span class="version-number">2.1.0</span></p>
+                    <p class="description">
+                        A comprehensive news aggregation platform bringing you the latest in cybersecurity and technology from trusted sources worldwide.
+                    </p>
+                </div>
+                
+                <div class="about-section">
+                    <h5><i class="fas fa-newspaper"></i> Features</h5>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> 13 Premium news sources</li>
+                        <li><i class="fas fa-check"></i> Real-time article aggregation</li>
+                        <li><i class="fas fa-check"></i> Smart duplicate detection</li>
+                        <li><i class="fas fa-check"></i> Trending topics analysis</li>
+                        <li><i class="fas fa-check"></i> Dark mode support</li>
+                        <li><i class="fas fa-check"></i> Article bookmarking</li>
+                        <li><i class="fas fa-check"></i> Auto-refresh capabilities</li>
+                    </ul>
+                </div>
+                
+                <div class="about-section">
+                    <h5><i class="fas fa-shield-alt"></i> Sources</h5>
+                    <div class="sources-grid">
+                        <span class="source-tag cyber">🐛 BleepingComputer</span>
+                        <span class="source-tag cyber">🛡️ Cybersecurity News</span>
+                        <span class="source-tag cyber">🕵️ The Hacker News</span>
+                        <span class="source-tag cyber">👁️ Dark Reading</span>
+                        <span class="source-tag cyber">📅 SecurityWeek</span>
+                        <span class="source-tag cyber">🔍 Krebs on Security</span>
+                        <span class="source-tag tech">🖼️ Neowin</span>
+                        <span class="source-tag tech">❓ AskWoody</span>
+                        <span class="source-tag tech">🚀 TechCrunch</span>
+                        <span class="source-tag tech">⚡ The Verge</span>
+                        <span class="source-tag tech">⚙️ Ars Technica</span>
+                        <span class="source-tag tech">⚡ Wired</span>
+                        <span class="source-tag tech">📱 Engadget</span>
+                    </div>
+                </div>
+                
+                <div class="about-section">
+                    <h5><i class="fas fa-code"></i> Technical Details</h5>
+                    <div class="tech-details">
+                        <div class="tech-item">
+                            <span class="tech-label">Built with:</span>
+                            <span class="tech-value">Node.js, Express, Vanilla JS</span>
+                        </div>
+                        <div class="tech-item">
+                            <span class="tech-label">Last Updated:</span>
+                            <span class="tech-value" id="appBuildDate">August 2025</span>
+                        </div>
+                        <div class="tech-item">
+                            <span class="tech-label">Articles Processed:</span>
+                            <span class="tech-value" id="totalProcessed">Loading...</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

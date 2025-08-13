@@ -293,6 +293,7 @@
     </div>
 
     <script>
+        // Base architecture data - sources will be added dynamically
         const architectureData = {
             nodes: [
                 // Frontend Layer
@@ -305,12 +306,6 @@
                 { id: 'news-service', name: 'News Service', layer: 'backend', type: 'service', x: 400, y: 400, icon: '📰' },
                 { id: 'cache', name: 'In-Memory Cache', layer: 'backend', type: 'storage', x: 600, y: 300, icon: '💾' },
                 { id: 'cron', name: 'Cron Scheduler', layer: 'backend', type: 'scheduler', x: 200, y: 400, icon: '⏰' },
-                
-                // Data Sources
-                { id: 'bleeping', name: 'BleepingComputer', layer: 'external', type: 'source', x: 150, y: 550, icon: '🔒' },
-                { id: 'cybersec', name: 'Cybersecurity News', layer: 'external', type: 'source', x: 300, y: 580, icon: '🛡️' },
-                { id: 'neowin', name: 'Neowin', layer: 'external', type: 'source', x: 500, y: 580, icon: '💻' },
-                { id: 'askwoody', name: 'AskWoody', layer: 'external', type: 'source', x: 650, y: 550, icon: '🔍' },
                 
                 // Processing Components
                 { id: 'scraper', name: 'Web Scraper', layer: 'backend', type: 'processor', x: 400, y: 500, icon: '🕷️' },
@@ -327,15 +322,100 @@
                 { source: 'express', target: 'cache', type: 'cache', label: 'Cache Access' },
                 { source: 'news-service', target: 'scraper', type: 'process', label: 'Scraping' },
                 { source: 'scraper', target: 'ai-summary', type: 'process', label: 'Processing' },
-                { source: 'cron', target: 'news-service', type: 'trigger', label: 'Scheduled Refresh' },
-                
-                // External sources
-                { source: 'scraper', target: 'bleeping', type: 'fetch', label: 'HTTP Request' },
-                { source: 'scraper', target: 'cybersec', type: 'fetch', label: 'HTTP Request' },
-                { source: 'scraper', target: 'neowin', type: 'fetch', label: 'HTTP Request' },
-                { source: 'scraper', target: 'askwoody', type: 'fetch', label: 'HTTP Request' }
+                { source: 'cron', target: 'news-service', type: 'trigger', label: 'Scheduled Refresh' }
             ]
         };
+
+        // Function to fetch and add dynamic sources
+        async function loadDynamicSources() {
+            try {
+                console.log('Fetching news sources...');
+                const response = await fetch('/api/sources');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const sources = await response.json();
+                console.log(`Loaded ${sources.length} sources:`, sources.map(s => s.name));
+                
+                // Add source nodes dynamically
+                const sourceIcons = {
+                    'BleepingComputer': '🔒',
+                    'Cybersecurity News': '🛡️',
+                    'The Hacker News': '⚡',
+                    'Dark Reading': '🔍',
+                    'SecurityWeek': '🔐',
+                    'Krebs on Security': '🕵️',
+                    'Neowin': '💻',
+                    'AskWoody': '🔧',
+                    'TechCrunch': '🚀',
+                    'The Verge': '📱',
+                    'Ars Technica': '⚙️',
+                    'Wired': '🔬',
+                    'Engadget': '📺'
+                };
+                
+                sources.forEach((source, index) => {
+                    const sourceId = `source-${source.id}`;
+                    const xPosition = 50 + (index % 7) * 150; // Distribute across width
+                    const yPosition = 550 + Math.floor(index / 7) * 50; // Multiple rows if needed
+                    
+                    // Add source node
+                    architectureData.nodes.push({
+                        id: sourceId,
+                        name: source.name,
+                        layer: 'external',
+                        type: 'source',
+                        x: xPosition,
+                        y: yPosition,
+                        icon: sourceIcons[source.name] || '📰',
+                        sourceData: source
+                    });
+                    
+                    // Add scraper connection
+                    architectureData.links.push({
+                        source: 'scraper',
+                        target: sourceId,
+                        type: 'fetch',
+                        label: 'HTTP Request'
+                    });
+                });
+                
+                console.log(`Added ${sources.length} dynamic source nodes`);
+                return true;
+            } catch (error) {
+                console.error('Error loading sources:', error);
+                // Fallback to default sources if API fails
+                addFallbackSources();
+                return false;
+            }
+        }
+
+        // Fallback sources if API fails
+        function addFallbackSources() {
+            const fallbackSources = [
+                { id: 'bleeping', name: 'BleepingComputer', icon: '🔒', x: 150, y: 550 },
+                { id: 'cybersec', name: 'Cybersecurity News', icon: '🛡️', x: 300, y: 580 },
+                { id: 'neowin', name: 'Neowin', icon: '💻', x: 500, y: 580 },
+                { id: 'askwoody', name: 'AskWoody', icon: '🔍', x: 650, y: 550 }
+            ];
+            
+            fallbackSources.forEach(source => {
+                architectureData.nodes.push({
+                    ...source,
+                    layer: 'external',
+                    type: 'source'
+                });
+                
+                architectureData.links.push({
+                    source: 'scraper',
+                    target: source.id,
+                    type: 'fetch',
+                    label: 'HTTP Request'
+                });
+            });
+            
+            console.log('Using fallback sources');
+        }
 
         const componentDetails = {
             'browser': {
@@ -415,8 +495,77 @@
                 description: 'Technology advice and news platform focusing on Windows and software',
                 tech: 'External Website, Content Extraction',
                 features: ['Windows Updates', 'Software Advice', 'Community Insights', 'Technical Support']
+            },
+            'source-1754951073270': {
+                title: 'TechCrunch',
+                description: 'Leading technology media property covering startups, venture capital, and innovation',
+                tech: 'External Website, RSS/API Scraping',
+                features: ['Startup Coverage', 'VC News', 'Product Launches', 'Industry Analysis']
+            },
+            'source-6': {
+                title: 'The Hacker News',
+                description: 'Cybersecurity publication covering the latest threats and security research',
+                tech: 'External Website, Web Scraping',
+                features: ['Security Research', 'Threat Analysis', 'Vulnerability Reports', 'Hacking News']
+            },
+            'source-7': {
+                title: 'Dark Reading',
+                description: 'Enterprise cybersecurity news and analysis for IT professionals',
+                tech: 'External Website, Content API',
+                features: ['Enterprise Security', 'Industry Analysis', 'Expert Commentary', 'Security Strategies']
+            },
+            'source-8': {
+                title: 'SecurityWeek',
+                description: 'Information security news covering enterprise security and emerging threats',
+                tech: 'External Website, Web Scraping',
+                features: ['Security Events', 'Industry News', 'Product Reviews', 'Conference Coverage']
+            },
+            'source-9': {
+                title: 'Krebs on Security',
+                description: 'Independent cybersecurity journalism by Brian Krebs',
+                tech: 'External Website, Content Extraction',
+                features: ['Investigative Reporting', 'Cybercrime Coverage', 'Data Breaches', 'Security Research']
+            },
+            'source-10': {
+                title: 'The Verge',
+                description: 'Technology news and media network covering the intersection of technology and culture',
+                tech: 'External Website, RSS/API Scraping',
+                features: ['Consumer Tech', 'Digital Culture', 'Reviews', 'Future Technology']
+            },
+            'source-11': {
+                title: 'Ars Technica',
+                description: 'Technology news and information website for a technical audience',
+                tech: 'External Website, Web Scraping',
+                features: ['Deep Technical Analysis', 'Science Coverage', 'Policy News', 'Hardware Reviews']
+            },
+            'source-12': {
+                title: 'Wired',
+                description: 'Technology, science, and culture magazine covering emerging trends',
+                tech: 'External Website, Content API',
+                features: ['Future Technology', 'Digital Culture', 'Science Reporting', 'Innovation Stories']
+            },
+            'source-13': {
+                title: 'Engadget',
+                description: 'Consumer electronics and technology news with reviews and analysis',
+                tech: 'External Website, RSS/Web Scraping',
+                features: ['Product Reviews', 'Consumer Electronics', 'Mobile Technology', 'Gaming News']
             }
         };
+
+        // Dynamic component details generator for sources
+        function generateSourceDetails(source) {
+            const categoryFeatures = {
+                'Cybersecurity': ['Security Threats', 'Vulnerability Analysis', 'Threat Intelligence', 'Security Research'],
+                'Technology': ['Tech Innovation', 'Product Reviews', 'Industry News', 'Hardware Updates']
+            };
+            
+            return {
+                title: source.name,
+                description: `${source.category} news source providing latest industry updates and analysis`,
+                tech: 'External Website, Web Scraping',
+                features: categoryFeatures[source.category] || ['Industry News', 'Article Updates', 'Content Feed', 'News Analysis']
+            };
+        }
 
         let svg, simulation, node, link, linkLabel;
         let currentView = 'default';
@@ -455,7 +604,7 @@
             }
         }
 
-        function initializeDiagram() {
+        async function initializeDiagram() {
             const container = document.querySelector('.diagram-container');
             width = container.clientWidth;
             height = container.clientHeight;
@@ -479,6 +628,8 @@
                 .attr('d', 'M0,-5L10,0L0,5')
                 .attr('fill', 'rgba(255, 255, 255, 0.8)');
 
+            // Load dynamic sources before creating visualization
+            await loadDynamicSources();
             createVisualization();
         }
 
@@ -661,7 +812,12 @@
         function showComponentInfo(event, d) {
             const panel = document.getElementById('info-panel');
             const info = document.getElementById('component-info');
-            const details = componentDetails[d.id];
+            let details = componentDetails[d.id];
+            
+            // If no predefined details and it's a source, generate them dynamically
+            if (!details && d.sourceData) {
+                details = generateSourceDetails(d.sourceData);
+            }
             
             if (details) {
                 info.innerHTML = `
@@ -672,6 +828,11 @@
                     <ul>
                         ${details.features.map(feature => `<li>${feature}</li>`).join('')}
                     </ul>
+                    ${d.sourceData ? `
+                        <p><strong>Status:</strong> <span style="color: ${d.sourceData.status === 'active' ? '#4CAF50' : '#FF9800'}">${d.sourceData.status}</span></p>
+                        <p><strong>Articles:</strong> ${d.sourceData.articleCount || 0}</p>
+                        <p><strong>Last Update:</strong> ${d.sourceData.lastSuccess ? new Date(d.sourceData.lastSuccess).toLocaleString() : 'Never'}</p>
+                    ` : ''}
                 `;
                 panel.classList.add('active');
             }
