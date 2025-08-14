@@ -6,10 +6,10 @@
     "category": "Cybersecurity",
     "status": "active",
     "articleCount": 10,
-    "lastSuccess": "2025-08-14T18:53:30.222Z",
+    "lastSuccess": "2025-08-14T19:00:01.792Z",
     "created": "2025-08-11T22:09:57.719Z",
     "lastError": null,
-    "lastAttempt": "2025-08-14T18:53:30.222Z"
+    "lastAttempt": "2025-08-14T19:00:01.792Z"
   },
   {
     "id": "2",
@@ -28,10 +28,10 @@
     "category": "Technology",
     "status": "active",
     "articleCount": 10,
-    "lastSuccess": "2025-08-14T18:53:32.732Z",
+    "lastSuccess": "2025-08-14T19:00:03.442Z",
     "created": "2025-08-11T22:09:57.719Z",
     "lastError": null,
-    "lastAttempt": "2025-08-14T18:53:32.732Z"
+    "lastAttempt": "2025-08-14T19:00:03.442Z"
   },
   {
     "id": "4",
@@ -51,9 +51,9 @@
     "status": "active",
     "created": "2025-08-11T22:24:33.270Z",
     "articleCount": 1,
-    "lastSuccess": "2025-08-14T18:53:33.986Z",
+    "lastSuccess": "2025-08-14T19:00:04.585Z",
     "lastError": null,
-    "lastAttempt": "2025-08-14T18:53:33.986Z"
+    "lastAttempt": "2025-08-14T19:00:04.585Z"
   },
   {
     "id": "6",
@@ -99,9 +99,9 @@
     "status": "active",
     "created": "2025-08-12T15:00:00.000Z",
     "articleCount": 10,
-    "lastSuccess": "2025-08-14T18:53:35.321Z",
+    "lastSuccess": "2025-08-14T19:00:05.468Z",
     "lastError": null,
-    "lastAttempt": "2025-08-14T18:53:35.321Z"
+    "lastAttempt": "2025-08-14T19:00:05.468Z"
   },
   {
     "id": "10",
@@ -123,9 +123,9 @@
     "status": "active",
     "created": "2025-08-12T15:00:00.000Z",
     "articleCount": 10,
-    "lastSuccess": "2025-08-14T18:53:35.969Z",
+    "lastSuccess": "2025-08-14T19:00:05.974Z",
     "lastError": null,
-    "lastAttempt": "2025-08-14T18:53:35.969Z"
+    "lastAttempt": "2025-08-14T19:00:05.974Z"
   },
   {
     "id": "12",

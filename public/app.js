@@ -600,6 +600,21 @@ class NewsAggregator {
                 this.saveArticle(articleId);
             });
         });
+        
+        document.querySelectorAll('.share-btn.action-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const card = e.target.closest('.news-card');
+                this.toggleShareMenu(card);
+            });
+        });
+        
+        // Close share menus when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.share-buttons') && !e.target.closest('.share-btn.action-btn')) {
+                this.closeAllShareMenus();
+            }
+        });
     }
     
     showSavedArticles() {
@@ -765,6 +780,22 @@ class NewsAggregator {
         if (shareUrl) {
             window.open(shareUrl, '_blank');
         }
+    }
+    
+    toggleShareMenu(card) {
+        // Close all other share menus first
+        this.closeAllShareMenus();
+        
+        const shareButtons = card.querySelector('.share-buttons');
+        if (shareButtons) {
+            shareButtons.classList.toggle('active');
+        }
+    }
+    
+    closeAllShareMenus() {
+        document.querySelectorAll('.share-buttons.active').forEach(menu => {
+            menu.classList.remove('active');
+        });
     }
     
     scrollToArticle(articleId) {

@@ -539,11 +539,17 @@ body.dark-theme .search-input::placeholder {
     gap: 8px;
     margin-top: 10px;
     opacity: 0;
-    transition: opacity 0.3s ease;
+    max-height: 0;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    transform: translateY(-10px);
 }
 
-.news-card:hover .share-buttons {
+.news-card:hover .share-buttons,
+.share-buttons.active {
     opacity: 1;
+    max-height: 50px;
+    transform: translateY(0);
 }
 
 .share-btn {
