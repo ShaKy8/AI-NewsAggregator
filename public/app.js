@@ -167,7 +167,7 @@ class NewsAggregator {
         const relatedArticles = this.getRelatedArticles(article);
         
         return `
-            <div class="news-card ${isSaved ? 'saved' : ''} ${isRead ? 'read' : ''}" data-article-id="${article.id}">
+            <div class="news-card ${isSaved ? 'saved' : ''} ${isRead ? 'read' : ''} ${article.priority ? 'priority-' + article.priority : ''}" data-article-id="${article.id}">
                 <div class="card-actions">
                     <button class="action-btn save-btn ${isSaved ? 'saved' : ''}" title="${isSaved ? 'Remove from saved' : 'Save article'}">
                         <i class="${isSaved ? 'fas fa-bookmark' : 'far fa-bookmark'}"></i>
@@ -188,10 +188,13 @@ class NewsAggregator {
                             <span class="reliability-stars">${'★'.repeat(reliabilityScore)}${'☆'.repeat(5-reliabilityScore)}</span>
                         </div>
                     </div>
-                    <span class="category-badge">
-                        <i class="${categoryIcon}"></i>
-                        ${article.category}
-                    </span>
+                    <div class="header-badges">
+                        ${this.renderPriorityBadges(article)}
+                        <span class="category-badge">
+                            <i class="${categoryIcon}"></i>
+                            ${article.category}
+                        </span>
+                    </div>
                 </div>
                 
                 <div class="reading-time">
@@ -258,6 +261,45 @@ class NewsAggregator {
             'Technology': 'fas fa-microchip'
         };
         return icons[category] || 'fas fa-newspaper';
+    }
+    
+    renderPriorityBadges(article) {
+        let badges = '';
+        
+        // Breaking news flash indicator
+        if (article.isBreaking) {
+            badges += '<span class="priority-badge breaking"><i class="fas fa-bolt"></i> BREAKING</span>';
+        }
+        
+        // Priority level badge
+        if (article.priority && article.priority !== 'medium') {
+            const priorityConfig = {
+                'critical': { icon: 'fas fa-exclamation-triangle', text: 'CRITICAL', class: 'critical' },
+                'high': { icon: 'fas fa-exclamation-circle', text: 'HIGH', class: 'high' },
+                'medium-high': { icon: 'fas fa-info-circle', text: 'IMPORTANT', class: 'medium-high' }
+            };
+            
+            const config = priorityConfig[article.priority];
+            if (config) {
+                badges += `<span class="priority-badge ${config.class}"><i class="${config.icon}"></i> ${config.text}</span>`;
+            }
+        }
+        
+        // Sentiment indicator
+        if (article.sentiment && article.sentiment !== 'neutral' && article.sentiment !== 'informational') {
+            const sentimentConfig = {
+                'critical': { icon: 'fas fa-shield-alt', class: 'sentiment-critical' },
+                'important': { icon: 'fas fa-star', class: 'sentiment-important' },
+                'moderate': { icon: 'fas fa-thumbs-up', class: 'sentiment-moderate' }
+            };
+            
+            const config = sentimentConfig[article.sentiment];
+            if (config && !article.isBreaking && article.priority !== 'critical') {
+                badges += `<span class="sentiment-badge ${config.class}"><i class="${config.icon}"></i></span>`;
+            }
+        }
+        
+        return badges;
     }
 
     getTimeAgo(dateString) {

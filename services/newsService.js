@@ -487,12 +487,21 @@ async function getAllNews() {
       const articles = await source.scraper();
       
       if (articles && articles.length > 0) {
-        const articlesWithSummaries = articles.map(article => ({
-          ...article,
-          aiSummary: generateAISummary(article)
-        }));
+        const articlesWithAnalysis = articles.map(article => {
+          const articleWithSummary = {
+            ...article,
+            aiSummary: generateAISummary(article)
+          };
+          
+          // Add sentiment analysis and priority scoring
+          const analysis = analyzeArticle(articleWithSummary);
+          return {
+            ...articleWithSummary,
+            ...analysis
+          };
+        });
         
-        allArticles.push(...articlesWithSummaries);
+        allArticles.push(...articlesWithAnalysis);
         successfulSources++;
         console.log(`Found ${articles.length} articles from ${source.name}`);
         
@@ -543,6 +552,108 @@ async function updateSourceStats(sourceId, articleCount, error = null) {
   } catch (err) {
     console.error('Error updating source stats:', err.message);
   }
+}
+
+// AI-powered article analysis for sentiment and priority
+function analyzeArticle(article) {
+  const title = (article.title || '').toLowerCase();
+  const summary = (article.summary || article.aiSummary || '').toLowerCase();
+  const content = title + ' ' + summary;
+  
+  // Calculate reading time (average 200 words per minute)
+  const wordCount = content.split(/\s+/).length;
+  const readingTime = Math.max(1, Math.ceil(wordCount / 200));
+  
+  // Priority keywords for cybersecurity and tech
+  const criticalKeywords = [
+    'zero-day', 'critical vulnerability', 'data breach', 'ransomware attack', 'malware attack',
+    'security breach', 'cyber attack', 'exploitation', 'emergency patch', 'urgent update',
+    'critical flaw', 'remote code execution', 'privilege escalation', 'breaking news'
+  ];
+  
+  const highKeywords = [
+    'vulnerability', 'security', 'patch', 'update', 'exploit', 'malware', 'phishing',
+    'threat', 'hack', 'breach', 'compromise', 'backdoor', 'trojan', 'virus', 'ransomware'
+  ];
+  
+  const techKeywords = [
+    'microsoft', 'windows', 'google', 'apple', 'android', 'ios', 'linux',
+    'chrome', 'firefox', 'azure', 'aws', 'cloud', 'artificial intelligence', 'machine learning'
+  ];
+  
+  // Calculate priority score
+  let priorityScore = 0;
+  let sentiment = 'neutral';
+  let priority = 'medium';
+  
+  // Critical priority detection
+  const hasCritical = criticalKeywords.some(keyword => content.includes(keyword));
+  if (hasCritical) {
+    priorityScore += 10;
+    sentiment = 'critical';
+    priority = 'critical';
+  }
+  
+  // High priority detection
+  const hasHigh = highKeywords.some(keyword => content.includes(keyword));
+  if (hasHigh) {
+    priorityScore += 5;
+    if (priority !== 'critical') {
+      sentiment = 'important';
+      priority = 'high';
+    }
+  }
+  
+  // Tech relevance boost
+  const hasTech = techKeywords.some(keyword => content.includes(keyword));
+  if (hasTech) {
+    priorityScore += 2;
+    if (priority === 'medium') {
+      priority = 'medium-high';
+    }
+  }
+  
+  // Breaking news detection
+  const isBreaking = content.includes('breaking') || content.includes('urgent') || content.includes('just in');
+  if (isBreaking) {
+    priorityScore += 8;
+    sentiment = 'breaking';
+    if (priority === 'medium') priority = 'high';
+  }
+  
+  // Recent time boost (articles from last 24 hours)
+  const articleAge = new Date() - new Date(article.scraped || new Date());
+  const hoursOld = articleAge / (1000 * 60 * 60);
+  if (hoursOld < 24) {
+    priorityScore += 3;
+  }
+  
+  // Determine final sentiment if still neutral
+  if (sentiment === 'neutral') {
+    if (priorityScore >= 7) sentiment = 'important';
+    else if (priorityScore >= 3) sentiment = 'moderate';
+    else sentiment = 'informational';
+  }
+  
+  return {
+    priorityScore,
+    sentiment,
+    priority,
+    readingTime,
+    isBreaking,
+    keywords: extractKeywords(content)
+  };
+}
+
+// Extract relevant keywords from content
+function extractKeywords(content) {
+  const relevantTerms = [
+    'cybersecurity', 'malware', 'ransomware', 'vulnerability', 'breach', 'hack',
+    'microsoft', 'windows', 'google', 'apple', 'android', 'linux',
+    'ai', 'artificial intelligence', 'machine learning', 'cloud', 'security'
+  ];
+  
+  return relevantTerms.filter(term => content.includes(term));
 }
 
 module.exports = {
