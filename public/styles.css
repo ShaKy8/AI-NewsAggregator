@@ -1342,3 +1342,33 @@ body.dark-theme .tech-label {
 body.dark-theme .tech-item {
     background: rgba(255, 255, 255, 0.05);
 }
+
+/* Credits Attribution Styles */
+.credits-attribution {
+    text-align: center;
+    font-size: 1rem;
+    color: #666;
+    margin: 0;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+    border-radius: 10px;
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    font-style: italic;
+}
+
+.credits-attribution strong {
+    color: #667eea;
+    font-weight: 600;
+    font-style: normal;
+}
+
+/* Dark theme support for credits */
+body.dark-theme .credits-attribution {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+    border-color: rgba(102, 126, 234, 0.2);
+    color: #b0b0b0;
+}
+
+body.dark-theme .credits-attribution strong {
+    color: #8fa3f7;
+}
