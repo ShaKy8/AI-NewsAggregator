@@ -34,28 +34,38 @@
                     </div>
                     
                     <div class="control-buttons">
-                        <button id="themeToggle" class="control-btn" title="Toggle Dark Mode">
-                            <i class="fas fa-moon"></i>
-                        </button>
-                        <button id="autoRefreshToggle" class="control-btn" title="Toggle Auto Refresh">
-                            <i class="fas fa-clock"></i>
-                        </button>
+                        <!-- Always visible controls -->
                         <button id="savedArticlesBtn" class="control-btn" title="Saved Articles">
                             <i class="fas fa-bookmark"></i>
                             <span class="saved-count" id="savedCount">0</span>
                         </button>
-                        <a href="/architecture.html" class="control-btn architecture-btn" title="View System Architecture">
-                            <i class="fas fa-sitemap"></i>
-                            <span>Architecture</span>
-                        </a>
-                        <a href="/admin.html" class="control-btn admin-btn" title="Manage News Sources">
-                            <i class="fas fa-cogs"></i>
-                            <span>Admin</span>
-                        </a>
-                        <button id="aboutBtn" class="control-btn about-btn" title="About CyberTech News">
-                            <i class="fas fa-info-circle"></i>
-                            <span>About</span>
+                        
+                        <!-- Mobile hamburger menu -->
+                        <button id="mobileMenuToggle" class="control-btn mobile-menu-btn" title="More Options">
+                            <i class="fas fa-bars"></i>
                         </button>
+                        
+                        <!-- Desktop controls (hidden on mobile) -->
+                        <div class="desktop-controls">
+                            <button id="themeToggle" class="control-btn" title="Toggle Dark Mode">
+                                <i class="fas fa-moon"></i>
+                            </button>
+                            <button id="autoRefreshToggle" class="control-btn" title="Toggle Auto Refresh">
+                                <i class="fas fa-clock"></i>
+                            </button>
+                            <a href="/architecture.html" class="control-btn architecture-btn" title="View System Architecture">
+                                <i class="fas fa-sitemap"></i>
+                                <span>Architecture</span>
+                            </a>
+                            <a href="/admin.html" class="control-btn admin-btn" title="Manage News Sources">
+                                <i class="fas fa-cogs"></i>
+                                <span>Admin</span>
+                            </a>
+                            <button id="aboutBtn" class="control-btn about-btn" title="About CyberTech News">
+                                <i class="fas fa-info-circle"></i>
+                                <span>About</span>
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="refresh-section">
@@ -265,6 +275,40 @@
             </div>
         </div>
     </footer>
+
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu-overlay" id="mobileMenuOverlay" style="display: none;">
+        <div class="mobile-menu-content">
+            <div class="mobile-menu-header">
+                <h3>Options</h3>
+                <button id="closeMobileMenu" class="close-mobile-menu">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="mobile-menu-body">
+                <button id="mobileThemeToggle" class="mobile-menu-item">
+                    <i class="fas fa-moon"></i>
+                    <span>Dark Mode</span>
+                </button>
+                <button id="mobileAutoRefreshToggle" class="mobile-menu-item">
+                    <i class="fas fa-clock"></i>
+                    <span>Auto Refresh</span>
+                </button>
+                <a href="/architecture.html" class="mobile-menu-item">
+                    <i class="fas fa-sitemap"></i>
+                    <span>Architecture</span>
+                </a>
+                <a href="/admin.html" class="mobile-menu-item">
+                    <i class="fas fa-cogs"></i>
+                    <span>Admin Panel</span>
+                </a>
+                <button id="mobileAboutBtn" class="mobile-menu-item">
+                    <i class="fas fa-info-circle"></i>
+                    <span>About</span>
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script src="app.js"></script>
 </body>

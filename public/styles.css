@@ -135,11 +135,16 @@ body.dark-theme .search-input::placeholder {
     border: none;
     color: #999;
     cursor: pointer;
-    padding: 4px;
+    padding: 8px;
     margin-left: 8px;
     border-radius: 50%;
     transition: all 0.2s ease;
     font-size: 0.8rem;
+    min-width: 32px;
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .clear-search:hover {
@@ -155,7 +160,7 @@ body.dark-theme .search-input::placeholder {
 .control-btn {
     background: rgba(255, 255, 255, 0.9);
     border: none;
-    padding: 8px;
+    padding: 10px;
     border-radius: 50%;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -163,8 +168,8 @@ body.dark-theme .search-input::placeholder {
     font-size: 0.9rem;
     color: #667eea;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    width: 32px;
-    height: 32px;
+    width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -198,8 +203,8 @@ body.dark-theme .search-input::placeholder {
 
 .architecture-btn {
     width: auto !important;
-    padding: 8px 15px !important;
-    border-radius: 20px !important;
+    padding: 12px 18px !important;
+    border-radius: 22px !important;
     font-weight: 500;
     text-decoration: none;
     display: flex !important;
@@ -208,6 +213,8 @@ body.dark-theme .search-input::placeholder {
     background: linear-gradient(135deg, #4ecdc4, #44a08d) !important;
     color: white !important;
     font-size: 0.85rem;
+    min-height: 44px;
+    min-width: 44px;
 }
 
 .architecture-btn:hover {
@@ -218,8 +225,8 @@ body.dark-theme .search-input::placeholder {
 
 .admin-btn {
     width: auto !important;
-    padding: 8px 15px !important;
-    border-radius: 20px !important;
+    padding: 12px 18px !important;
+    border-radius: 22px !important;
     font-weight: 500;
     text-decoration: none;
     display: flex !important;
@@ -228,6 +235,8 @@ body.dark-theme .search-input::placeholder {
     background: linear-gradient(135deg, #ff6b6b, #ee5a24) !important;
     color: white !important;
     font-size: 0.85rem;
+    min-height: 44px;
+    min-width: 44px;
 }
 
 .admin-btn:hover {
@@ -238,8 +247,8 @@ body.dark-theme .search-input::placeholder {
 
 .about-btn {
     width: auto !important;
-    padding: 8px 15px !important;
-    border-radius: 20px !important;
+    padding: 12px 18px !important;
+    border-radius: 22px !important;
     font-weight: 500;
     text-decoration: none;
     display: flex !important;
@@ -250,6 +259,8 @@ body.dark-theme .search-input::placeholder {
     font-size: 0.85rem;
     border: none;
     cursor: pointer;
+    min-height: 44px;
+    min-width: 44px;
 }
 
 .about-btn:hover {
@@ -491,8 +502,8 @@ body.dark-theme .search-input::placeholder {
     background: rgba(255, 255, 255, 0.9);
     border: none;
     border-radius: 50%;
-    width: 32px;
-    height: 32px;
+    width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -615,6 +626,33 @@ body.dark-theme .search-input::placeholder {
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 15px;
+}
+
+.card-header-simple {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.card-footer-simple {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.article-meta {
+    color: #666;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.article-meta i {
+    font-size: 0.8rem;
+    color: #999;
 }
 
 .source-info {
@@ -786,37 +824,54 @@ body.dark-theme .search-input::placeholder {
     }
     
     .header-row {
-        flex-direction: column;
-        gap: 12px;
-        align-items: stretch;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto auto auto;
+        gap: 15px;
+        align-items: center;
     }
     
     .title {
-        font-size: 1.5rem;
-        justify-content: center;
-        order: 1;
+        font-size: 1.3rem;
+        grid-column: 1;
+        grid-row: 1;
+        justify-content: flex-start;
+        margin: 0;
     }
     
     .search-container {
-        order: 2;
+        grid-column: 1 / -1;
+        grid-row: 2;
         min-width: auto;
     }
     
     .control-buttons {
-        order: 3;
+        grid-column: 2;
+        grid-row: 1;
         display: flex;
-        justify-content: center;
-        gap: 10px;
+        justify-content: flex-end;
+        gap: 12px;
+    }
+    
+    .mobile-menu-btn {
+        display: flex !important;
+    }
+    
+    .desktop-controls {
+        display: none;
     }
     
     .refresh-section {
-        order: 4;
-        align-self: center;
+        grid-column: 1;
+        grid-row: 3;
+        justify-self: start;
     }
     
     .filter-buttons {
-        order: 5;
-        justify-content: center;
+        grid-column: 2;
+        grid-row: 3;
+        justify-content: flex-end;
+        gap: 8px;
     }
     
     .filter-btn {
@@ -1377,6 +1432,169 @@ body.dark-theme .credits-attribution {
 
 body.dark-theme .credits-attribution strong {
     color: #8fa3f7;
+}
+
+/* Mobile Menu Styles */
+.mobile-menu-btn {
+    display: none;
+}
+
+.desktop-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.mobile-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mobile-menu-content {
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    width: 90%;
+    max-width: 320px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    overflow: hidden;
+    animation: slideInUp 0.3s ease;
+}
+
+.mobile-menu-header {
+    padding: 20px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+}
+
+.mobile-menu-header h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+}
+
+.close-mobile-menu {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #999;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-mobile-menu:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: #333;
+}
+
+.mobile-menu-body {
+    padding: 10px 0;
+}
+
+.mobile-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 20px;
+    background: none;
+    border: none;
+    color: #333;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    width: 100%;
+    text-align: left;
+    min-height: 54px;
+}
+
+.mobile-menu-item:hover {
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+}
+
+.mobile-menu-item i {
+    font-size: 1.1rem;
+    width: 20px;
+    color: #667eea;
+}
+
+.mobile-menu-item span {
+    font-weight: 500;
+}
+
+/* Dark theme support for mobile menu */
+body.dark-theme .mobile-menu-content {
+    background: rgba(30, 30, 50, 0.98);
+}
+
+body.dark-theme .mobile-menu-header {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-theme .mobile-menu-header h3,
+body.dark-theme .mobile-menu-item {
+    color: #e0e0e0;
+}
+
+body.dark-theme .close-mobile-menu {
+    color: #ccc;
+}
+
+body.dark-theme .close-mobile-menu:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #e0e0e0;
+}
+
+body.dark-theme .mobile-menu-item:hover {
+    background: rgba(102, 126, 234, 0.2);
+    color: #8fa3f7;
+}
+
+/* Dark theme support for simplified cards */
+body.dark-theme .card-footer-simple {
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-theme .article-meta {
+    color: #b0b0b0;
+}
+
+body.dark-theme .article-meta i {
+    color: #999;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(50px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 /* Priority Badges and Indicators */

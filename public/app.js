@@ -31,10 +31,26 @@ class NewsAggregator {
             btn.addEventListener('click', (e) => this.filterNews(e.target.dataset.filter));
         });
         
-        document.getElementById('themeToggle').addEventListener('click', () => this.toggleTheme());
-        document.getElementById('autoRefreshToggle').addEventListener('click', () => this.toggleAutoRefresh());
+        // Desktop controls
+        const themeToggle = document.getElementById('themeToggle');
+        const autoRefreshToggle = document.getElementById('autoRefreshToggle');
+        const aboutBtn = document.getElementById('aboutBtn');
+        
+        if (themeToggle) themeToggle.addEventListener('click', () => this.toggleTheme());
+        if (autoRefreshToggle) autoRefreshToggle.addEventListener('click', () => this.toggleAutoRefresh());
+        if (aboutBtn) aboutBtn.addEventListener('click', () => this.showAboutModal());
+        
         document.getElementById('savedArticlesBtn').addEventListener('click', () => this.showSavedArticles());
-        document.getElementById('aboutBtn').addEventListener('click', () => this.showAboutModal());
+        
+        // Mobile menu controls
+        document.getElementById('mobileMenuToggle').addEventListener('click', () => this.showMobileMenu());
+        document.getElementById('closeMobileMenu').addEventListener('click', () => this.closeMobileMenu());
+        document.getElementById('mobileThemeToggle').addEventListener('click', () => this.toggleTheme());
+        document.getElementById('mobileAutoRefreshToggle').addEventListener('click', () => this.toggleAutoRefresh());
+        document.getElementById('mobileAboutBtn').addEventListener('click', () => {
+            this.closeMobileMenu();
+            this.showAboutModal();
+        });
         
         const searchInput = document.getElementById('searchInput');
         const clearSearch = document.getElementById('clearSearch');
@@ -45,6 +61,15 @@ class NewsAggregator {
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 this.closeSavedModal();
+                this.closeAboutModal();
+                this.closeMobileMenu();
+            }
+        });
+        
+        // Close mobile menu on overlay click
+        document.getElementById('mobileMenuOverlay').addEventListener('click', (e) => {
+            if (e.target.id === 'mobileMenuOverlay') {
+                this.closeMobileMenu();
             }
         });
     }
@@ -163,93 +188,47 @@ class NewsAggregator {
         const isSaved = this.savedArticles.some(saved => saved.id === article.id);
         const isRead = this.readArticles.includes(article.id);
         const readingTime = this.calculateReadingTime(article.summary || '');
-        const reliabilityScore = this.getReliabilityScore(article.source);
-        const relatedArticles = this.getRelatedArticles(article);
+        
+        // Combine AI summary with regular summary for simplified display
+        const combinedSummary = article.aiSummary || article.summary || '';
         
         return `
             <div class="news-card ${isSaved ? 'saved' : ''} ${isRead ? 'read' : ''} ${article.priority ? 'priority-' + article.priority : ''}" data-article-id="${article.id}">
+                <!-- Save button (always visible on mobile) -->
                 <div class="card-actions">
                     <button class="action-btn save-btn ${isSaved ? 'saved' : ''}" title="${isSaved ? 'Remove from saved' : 'Save article'}">
                         <i class="${isSaved ? 'fas fa-bookmark' : 'far fa-bookmark'}"></i>
                     </button>
-                    <button class="action-btn share-btn" title="Share article">
-                        <i class="fas fa-share-alt"></i>
-                    </button>
                 </div>
                 
-                ${article.image ? `
-                    <img src="${article.image}" alt="Article image" class="news-card-image" onerror="this.style.display='none'">
-                ` : ''}
-                
-                <div class="card-header">
-                    <div class="source-info">
-                        <span class="source-badge">${article.source}</span>
-                        <div class="reliability-score">
-                            <span class="reliability-stars">${'★'.repeat(reliabilityScore)}${'☆'.repeat(5-reliabilityScore)}</span>
-                        </div>
-                    </div>
-                    <div class="header-badges">
-                        ${this.renderPriorityBadges(article)}
-                        <span class="category-badge">
-                            <i class="${categoryIcon}"></i>
-                            ${article.category}
-                        </span>
-                    </div>
+                <!-- 1. Source and Category -->
+                <div class="card-header-simple">
+                    <span class="source-badge">${article.source}</span>
+                    <span class="category-badge">
+                        <i class="${categoryIcon}"></i>
+                        ${article.category}
+                    </span>
+                    ${this.renderPriorityBadges(article)}
                 </div>
                 
-                <div class="reading-time">
-                    <i class="fas fa-clock"></i>
-                    ~${readingTime} min read
-                </div>
-                
+                <!-- 2. Article Title (Primary CTA) -->
                 <h3 class="news-title">
                     <a href="${article.link}" target="_blank" rel="noopener noreferrer" onclick="newsAggregator.markAsRead('${article.id}')">
                         ${this.escapeHtml(article.title)}
                     </a>
                 </h3>
                 
-                ${article.aiSummary ? `
-                    <div class="ai-summary">
-                        ${this.escapeHtml(article.aiSummary)}
-                    </div>
-                ` : ''}
-                
+                <!-- 3. Summary Text -->
                 <div class="news-summary">
-                    ${this.escapeHtml(this.truncateText(article.summary, 150))}
+                    ${this.escapeHtml(this.truncateText(combinedSummary, 120))}
                 </div>
                 
-                ${relatedArticles.length > 0 ? `
-                    <div class="related-articles">
-                        <div class="related-title">Related Articles:</div>
-                        ${relatedArticles.map(related => `
-                            <div class="related-item" onclick="newsAggregator.scrollToArticle('${related.id}')">
-                                ${this.truncateText(related.title, 60)}
-                            </div>
-                        `).join('')}
-                    </div>
-                ` : ''}
-                
-                <div class="share-buttons">
-                    <button class="share-btn" onclick="newsAggregator.shareArticle('${article.id}', 'twitter')">
-                        <i class="fab fa-twitter"></i> Twitter
-                    </button>
-                    <button class="share-btn" onclick="newsAggregator.shareArticle('${article.id}', 'linkedin')">
-                        <i class="fab fa-linkedin"></i> LinkedIn
-                    </button>
-                    <button class="share-btn" onclick="newsAggregator.shareArticle('${article.id}', 'email')">
-                        <i class="fas fa-envelope"></i> Email
-                    </button>
-                </div>
-                
-                <div class="card-footer">
-                    <span class="publish-date">
+                <!-- 4. Time and Reading Estimate -->
+                <div class="card-footer-simple">
+                    <span class="article-meta">
                         <i class="fas fa-clock"></i>
-                        ${timeAgo}
+                        ${timeAgo} • ${readingTime} min read
                     </span>
-                    <a href="${article.link}" target="_blank" rel="noopener noreferrer" class="read-more" onclick="newsAggregator.markAsRead('${article.id}')">
-                        Read More
-                        <i class="fas fa-external-link-alt"></i>
-                    </a>
                 </div>
             </div>
         `;
@@ -495,16 +474,21 @@ class NewsAggregator {
     applyTheme() {
         const body = document.body;
         const themeBtn = document.getElementById('themeToggle');
-        const themeIcon = themeBtn.querySelector('i');
         
         if (this.isDarkTheme) {
             body.classList.add('dark-theme');
-            themeIcon.className = 'fas fa-sun';
-            themeBtn.classList.add('active');
+            if (themeBtn) {
+                const themeIcon = themeBtn.querySelector('i');
+                themeIcon.className = 'fas fa-sun';
+                themeBtn.classList.add('active');
+            }
         } else {
             body.classList.remove('dark-theme');
-            themeIcon.className = 'fas fa-moon';
-            themeBtn.classList.remove('active');
+            if (themeBtn) {
+                const themeIcon = themeBtn.querySelector('i');
+                themeIcon.className = 'fas fa-moon';
+                themeBtn.classList.remove('active');
+            }
         }
     }
     
@@ -514,7 +498,9 @@ class NewsAggregator {
         this.setupAutoRefresh();
         
         const autoRefreshBtn = document.getElementById('autoRefreshToggle');
-        autoRefreshBtn.classList.toggle('active', this.autoRefreshEnabled);
+        if (autoRefreshBtn) {
+            autoRefreshBtn.classList.toggle('active', this.autoRefreshEnabled);
+        }
         
         this.showNotification(
             `Auto-refresh ${this.autoRefreshEnabled ? 'enabled' : 'disabled'}`,
@@ -529,7 +515,9 @@ class NewsAggregator {
         }
         
         const autoRefreshBtn = document.getElementById('autoRefreshToggle');
-        autoRefreshBtn.classList.toggle('active', this.autoRefreshEnabled);
+        if (autoRefreshBtn) {
+            autoRefreshBtn.classList.toggle('active', this.autoRefreshEnabled);
+        }
         
         if (this.autoRefreshEnabled) {
             this.autoRefreshInterval = setInterval(() => {
@@ -862,6 +850,34 @@ class NewsAggregator {
 
     closeAboutModal() {
         document.getElementById('aboutModal').style.display = 'none';
+    }
+
+    showMobileMenu() {
+        const overlay = document.getElementById('mobileMenuOverlay');
+        overlay.style.display = 'flex';
+        
+        // Update mobile menu button states to match current settings
+        const mobileThemeBtn = document.getElementById('mobileThemeToggle');
+        const mobileAutoRefreshBtn = document.getElementById('mobileAutoRefreshToggle');
+        
+        // Update theme toggle text
+        const themeIcon = mobileThemeBtn.querySelector('i');
+        const themeText = mobileThemeBtn.querySelector('span');
+        if (this.isDarkTheme) {
+            themeIcon.className = 'fas fa-sun';
+            themeText.textContent = 'Light Mode';
+        } else {
+            themeIcon.className = 'fas fa-moon';
+            themeText.textContent = 'Dark Mode';
+        }
+        
+        // Update auto-refresh toggle text
+        const autoRefreshText = mobileAutoRefreshBtn.querySelector('span');
+        autoRefreshText.textContent = this.autoRefreshEnabled ? 'Auto Refresh: ON' : 'Auto Refresh: OFF';
+    }
+
+    closeMobileMenu() {
+        document.getElementById('mobileMenuOverlay').style.display = 'none';
     }
 }
 

@@ -6,10 +6,10 @@
     "category": "Cybersecurity",
     "status": "active",
     "articleCount": 10,
-    "lastSuccess": "2025-08-14T19:00:01.792Z",
+    "lastSuccess": "2025-08-18T16:56:13.479Z",
     "created": "2025-08-11T22:09:57.719Z",
     "lastError": null,
-    "lastAttempt": "2025-08-14T19:00:01.792Z"
+    "lastAttempt": "2025-08-18T16:56:13.479Z"
   },
   {
     "id": "2",
@@ -17,8 +17,8 @@
     "url": "https://cybersecuritynews.com/",
     "category": "Cybersecurity",
     "status": "active",
-    "articleCount": 0,
-    "lastSuccess": null,
+    "articleCount": 6,
+    "lastSuccess": "2025-08-15T14:46:03.174Z",
     "created": "2025-08-11T22:09:57.719Z"
   },
   {
@@ -26,12 +26,13 @@
     "name": "Neowin",
     "url": "https://www.neowin.net/",
     "category": "Technology",
-    "status": "active",
+    "status": "inactive",
     "articleCount": 10,
-    "lastSuccess": "2025-08-14T19:00:03.442Z",
+    "lastSuccess": "2025-08-15T14:46:25.076Z",
     "created": "2025-08-11T22:09:57.719Z",
     "lastError": null,
-    "lastAttempt": "2025-08-14T19:00:03.442Z"
+    "lastAttempt": "2025-08-15T14:46:25.076Z",
+    "updated": "2025-08-15T14:46:38.421Z"
   },
   {
     "id": "4",
@@ -41,7 +42,8 @@
     "status": "active",
     "articleCount": 0,
     "lastSuccess": null,
-    "created": "2025-08-11T22:09:57.719Z"
+    "created": "2025-08-11T22:09:57.719Z",
+    "updated": "2025-08-15T14:46:41.405Z"
   },
   {
     "id": "1754951073270",
@@ -51,9 +53,9 @@
     "status": "active",
     "created": "2025-08-11T22:24:33.270Z",
     "articleCount": 1,
-    "lastSuccess": "2025-08-14T19:00:04.585Z",
+    "lastSuccess": "2025-08-18T16:56:16.418Z",
     "lastError": null,
-    "lastAttempt": "2025-08-14T19:00:04.585Z"
+    "lastAttempt": "2025-08-18T16:56:16.418Z"
   },
   {
     "id": "6",
@@ -99,9 +101,9 @@
     "status": "active",
     "created": "2025-08-12T15:00:00.000Z",
     "articleCount": 10,
-    "lastSuccess": "2025-08-14T19:00:05.468Z",
+    "lastSuccess": "2025-08-18T16:56:16.918Z",
     "lastError": null,
-    "lastAttempt": "2025-08-14T19:00:05.468Z"
+    "lastAttempt": "2025-08-18T16:56:16.918Z"
   },
   {
     "id": "10",
@@ -120,24 +122,26 @@
     "name": "Ars Technica",
     "url": "https://arstechnica.com/",
     "category": "Technology",
-    "status": "active",
+    "status": "inactive",
     "created": "2025-08-12T15:00:00.000Z",
     "articleCount": 10,
-    "lastSuccess": "2025-08-14T19:00:05.974Z",
+    "lastSuccess": "2025-08-15T21:54:29.133Z",
     "lastError": null,
-    "lastAttempt": "2025-08-14T19:00:05.974Z"
+    "lastAttempt": "2025-08-15T21:54:29.133Z",
+    "updated": "2025-08-15T21:54:48.356Z"
   },
   {
     "id": "12",
     "name": "Wired",
     "url": "https://www.wired.com/",
     "category": "Technology",
-    "status": "active",
+    "status": "inactive",
     "created": "2025-08-12T15:00:00.000Z",
     "articleCount": 0,
     "lastSuccess": null,
     "lastError": null,
-    "lastAttempt": null
+    "lastAttempt": null,
+    "updated": "2025-08-18T14:54:05.197Z"
   },
   {
     "id": "13",
@@ -150,5 +154,18 @@
     "lastSuccess": null,
     "lastError": null,
     "lastAttempt": null
+  },
+  {
+    "id": "1755528834459",
+    "name": "ClaudeCode BLog",
+    "url": "https://claudecode.io/blog",
+    "category": "Technology",
+    "status": "active",
+    "selectors": null,
+    "articleCount": 10,
+    "lastSuccess": "2025-08-18T16:56:18.990Z",
+    "created": "2025-08-18T14:53:54.471Z",
+    "lastError": null,
+    "lastAttempt": "2025-08-18T16:56:18.990Z"
   }
 ]
