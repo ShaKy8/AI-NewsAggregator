@@ -12,8 +12,11 @@ class NewsAggregator {
         this.searchQuery = '';
         this.trendingTopics = [];
         this.excludedKeywords = JSON.parse(localStorage.getItem('excludedKeywords') || '[]');
+        this.includedKeywords = JSON.parse(localStorage.getItem('includedKeywords') || '[]');
         this.showHiddenArticles = false;
+        this.showOnlyIncluded = false;
         this.hiddenArticlesCount = 0;
+        this.includedArticlesCount = 0;
         this.init();
     }
 
@@ -26,6 +29,7 @@ class NewsAggregator {
         this.startRealTimeClock();
         this.setupStickyHeader();
         this.renderExclusionTags();
+        this.renderIncludeTags();
         this.loadNews();
         this.loadDynamicSources();
     }
@@ -110,10 +114,36 @@ class NewsAggregator {
             this.clearAllExclusions();
         });
         
-        // Preset button event listeners
+        // Exclusion preset button event listeners
         document.querySelectorAll('.preset-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 this.addExclusionKeyword(e.target.dataset.keyword);
+            });
+        });
+        
+        // Include filter event listeners
+        document.getElementById('includeInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.addIncludeKeyword();
+            }
+        });
+        
+        document.getElementById('addIncludeBtn').addEventListener('click', () => {
+            this.addIncludeKeyword();
+        });
+        
+        document.getElementById('showOnlyIncludedBtn').addEventListener('click', () => {
+            this.toggleOnlyIncluded();
+        });
+        
+        document.getElementById('clearIncludesBtn').addEventListener('click', () => {
+            this.clearAllIncludes();
+        });
+        
+        // Include preset button event listeners
+        document.querySelectorAll('.include-preset-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.addIncludeKeyword(e.target.dataset.keyword);
             });
         });
     }
@@ -366,9 +396,29 @@ class NewsAggregator {
 
     updateStats() {
         const total = this.filteredArticles.length;
-        const totalText = total === this.articles.length ? 
-            total.toString() : 
-            `${total} of ${this.articles.length}`;
+        let totalText = total.toString();
+        
+        // Enhanced stats display for filter interactions
+        if (this.includedKeywords.length > 0 || this.excludedKeywords.length > 0) {
+            const baseTotal = this.articles.length;
+            const filterInfo = [];
+            
+            if (this.includedKeywords.length > 0) {
+                filterInfo.push(`${this.includedArticlesCount} included`);
+            }
+            
+            if (this.excludedKeywords.length > 0 && this.hiddenArticlesCount > 0) {
+                filterInfo.push(`${this.hiddenArticlesCount} hidden`);
+            }
+            
+            if (filterInfo.length > 0) {
+                totalText = `${total} of ${baseTotal} (${filterInfo.join(', ')})`;
+            } else {
+                totalText = `${total} of ${baseTotal}`;
+            }
+        } else if (total !== this.articles.length) {
+            totalText = `${total} of ${this.articles.length}`;
+        }
         
         document.getElementById('totalArticles').textContent = totalText;
         
@@ -553,18 +603,40 @@ class NewsAggregator {
             );
         }
         
+        // Apply inclusion filters first (unless showing only included articles)
+        if (this.includedKeywords.length > 0) {
+            const beforeInclusionCount = filtered.length;
+            const included = filtered.filter(article => this.isArticleIncluded(article));
+            const notIncluded = filtered.filter(article => !this.isArticleIncluded(article));
+            
+            if (this.showOnlyIncluded) {
+                this.filteredArticles = included;
+                this.includedArticlesCount = included.length;
+                this.hiddenArticlesCount = notIncluded.length;
+                this.updateHiddenControls();
+                this.updateIncludeControls();
+                return;
+            } else {
+                filtered = included;
+                this.includedArticlesCount = included.length;
+            }
+        } else {
+            this.includedArticlesCount = 0;
+        }
+        
         // Apply exclusion filters (unless showing hidden articles)
         if (this.excludedKeywords.length > 0 && !this.showHiddenArticles) {
             const beforeExclusionCount = filtered.length;
             filtered = filtered.filter(article => !this.isArticleExcluded(article));
             excluded = this.articles.filter(article => this.isArticleExcluded(article));
             this.hiddenArticlesCount = beforeExclusionCount - filtered.length;
-        } else {
+        } else if (this.includedKeywords.length === 0) {
             this.hiddenArticlesCount = 0;
         }
         
         this.filteredArticles = this.showHiddenArticles ? [...filtered, ...excluded] : filtered;
         this.updateHiddenControls();
+        this.updateIncludeControls();
     }
     
     isAIRelated(article) {
@@ -590,6 +662,31 @@ class NewsAggregator {
         const searchText = (article.title + ' ' + (article.summary || '') + ' ' + (article.aiSummary || '')).toLowerCase();
         
         return this.excludedKeywords.some(keyword => {
+            const keywordLower = keyword.toLowerCase().trim();
+            
+            // Handle exact phrases (quoted terms)
+            if (keywordLower.startsWith('"') && keywordLower.endsWith('"')) {
+                const phrase = keywordLower.slice(1, -1);
+                return searchText.includes(phrase);
+            }
+            
+            // Handle wildcards
+            if (keywordLower.includes('*')) {
+                const regex = new RegExp(keywordLower.replace(/\*/g, '.*'), 'i');
+                return regex.test(searchText);
+            }
+            
+            // Simple keyword matching
+            return searchText.includes(keywordLower);
+        });
+    }
+
+    isArticleIncluded(article) {
+        if (this.includedKeywords.length === 0) return true; // No include filters = include all
+        
+        const searchText = (article.title + ' ' + (article.summary || '') + ' ' + (article.aiSummary || '')).toLowerCase();
+        
+        return this.includedKeywords.some(keyword => {
             const keywordLower = keyword.toLowerCase().trim();
             
             // Handle exact phrases (quoted terms)
@@ -712,6 +809,111 @@ class NewsAggregator {
         this.updateFilterCounts();
         
         this.announceToScreenReader(`Cleared all ${count} exclusion filters`);
+    }
+
+    addIncludeKeyword(keyword = null) {
+        const input = document.getElementById('includeInput');
+        const keywordToAdd = keyword || input.value.trim();
+        
+        if (!keywordToAdd) return;
+        
+        // Parse multiple keywords separated by commas
+        const keywords = keywordToAdd.split(',').map(k => k.trim()).filter(k => k);
+        
+        keywords.forEach(kw => {
+            if (!this.includedKeywords.includes(kw)) {
+                this.includedKeywords.push(kw);
+            }
+        });
+        
+        input.value = '';
+        this.saveIncludeKeywords();
+        this.renderIncludeTags();
+        this.applyCurrentFilters();
+        this.renderNews();
+        this.updateStats();
+        this.updateFilterCounts();
+        
+        const addedCount = keywords.length;
+        this.announceToScreenReader(`Added ${addedCount} include filter${addedCount > 1 ? 's' : ''}. Now showing only articles containing: ${keywords.join(', ')}`);
+    }
+
+    removeIncludeKeyword(keyword) {
+        this.includedKeywords = this.includedKeywords.filter(k => k !== keyword);
+        this.saveIncludeKeywords();
+        this.renderIncludeTags();
+        this.applyCurrentFilters();
+        this.renderNews();
+        this.updateStats();
+        this.updateFilterCounts();
+        
+        this.announceToScreenReader(`Removed include filter: ${keyword}`);
+    }
+
+    saveIncludeKeywords() {
+        localStorage.setItem('includedKeywords', JSON.stringify(this.includedKeywords));
+    }
+
+    renderIncludeTags() {
+        const container = document.getElementById('includeTags');
+        
+        if (this.includedKeywords.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+        
+        container.innerHTML = this.includedKeywords.map(keyword => `
+            <span class="include-tag">
+                <span class="include-keyword">${this.escapeHtml(keyword)}</span>
+                <button class="remove-include" onclick="newsAggregator.removeIncludeKeyword('${this.escapeHtml(keyword)}')" 
+                        aria-label="Remove ${this.escapeHtml(keyword)} include filter">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </span>
+        `).join('');
+    }
+
+    updateIncludeControls() {
+        const showOnlyBtn = document.getElementById('showOnlyIncludedBtn');
+        const clearIncludesBtn = document.getElementById('clearIncludesBtn');
+        const includedCountSpan = document.getElementById('includedCount');
+        
+        if (this.includedKeywords.length > 0) {
+            showOnlyBtn.style.display = 'inline-flex';
+            clearIncludesBtn.style.display = 'inline-flex';
+            includedCountSpan.textContent = this.includedArticlesCount;
+            
+            const onlyText = this.showOnlyIncluded ? 'Show All' : 'Show Only Included';
+            const onlyIcon = this.showOnlyIncluded ? 'fa-list' : 'fa-filter';
+            showOnlyBtn.innerHTML = `<i class="fas ${onlyIcon}"></i> ${onlyText} (${this.includedArticlesCount})`;
+        } else {
+            showOnlyBtn.style.display = 'none';
+            clearIncludesBtn.style.display = 'none';
+        }
+    }
+
+    toggleOnlyIncluded() {
+        this.showOnlyIncluded = !this.showOnlyIncluded;
+        this.applyCurrentFilters();
+        this.renderNews();
+        this.updateStats();
+        
+        const action = this.showOnlyIncluded ? 'Showing only included' : 'Showing all filtered';
+        this.announceToScreenReader(`${action} articles`);
+    }
+
+    clearAllIncludes() {
+        const count = this.includedKeywords.length;
+        this.includedKeywords = [];
+        this.showOnlyIncluded = false;
+        this.saveIncludeKeywords();
+        this.renderIncludeTags();
+        this.applyCurrentFilters();
+        this.renderNews();
+        this.updateStats();
+        this.updateFilterCounts();
+        
+        this.announceToScreenReader(`Cleared all ${count} include filters`);
     }
     
     handleSearch(query) {

@@ -109,6 +109,41 @@
                         </select>
                     </div>
                     
+                    <div class="include-filter-container">
+                        <label for="includeInput" class="include-filter-label" id="includeFilterLabel">
+                            <i class="fas fa-eye"></i>
+                            Include Keywords:
+                        </label>
+                        <div class="include-input-wrapper">
+                            <input type="text" id="includeInput" class="include-input" 
+                                   placeholder="e.g., cybersecurity, AI, breaking..." 
+                                   aria-labelledby="includeFilterLabel"
+                                   aria-describedby="includeHelp">
+                            <button id="addIncludeBtn" class="add-include-btn" aria-label="Add include filter">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <div class="include-presets">
+                            <button class="include-preset-btn" data-keyword="cybersecurity">Cybersecurity</button>
+                            <button class="include-preset-btn" data-keyword="AI">AI/ML</button>
+                            <button class="include-preset-btn" data-keyword="breaking">Breaking News</button>
+                        </div>
+                        <div class="include-tags" id="includeTags" aria-live="polite"></div>
+                        <div class="include-controls">
+                            <button id="showOnlyIncludedBtn" class="include-control-btn" style="display: none;">
+                                <i class="fas fa-filter"></i>
+                                Show Only Included (<span id="includedCount">0</span>)
+                            </button>
+                            <button id="clearIncludesBtn" class="include-control-btn" style="display: none;">
+                                <i class="fas fa-times-circle"></i>
+                                Clear All
+                            </button>
+                        </div>
+                        <small id="includeHelp" class="include-help">
+                            Include keywords: Show only articles containing these terms. Use quotes for exact phrases.
+                        </small>
+                    </div>
+                    
                     <div class="exclusion-filter-container">
                         <label for="exclusionInput" class="exclusion-filter-label" id="exclusionFilterLabel">
                             <i class="fas fa-eye-slash"></i>

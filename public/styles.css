@@ -304,6 +304,218 @@ body.dark-theme .exclusion-help {
     color: rgba(224, 224, 224, 0.6);
 }
 
+/* Include Filter Styles */
+.include-filter-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 15px;
+    padding: 15px;
+    background: rgba(81, 207, 102, 0.1);
+    border-radius: 10px;
+    border: 1px solid rgba(81, 207, 102, 0.2);
+}
+
+.include-filter-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 5px;
+}
+
+.include-input-wrapper {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.include-input {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(81, 207, 102, 0.3);
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.include-input:focus {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(81, 207, 102, 0.5);
+    box-shadow: 0 0 0 2px rgba(81, 207, 102, 0.2);
+}
+
+.add-include-btn {
+    background: linear-gradient(135deg, #51cf66, #37b24d);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+}
+
+.add-include-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 15px rgba(81, 207, 102, 0.3);
+}
+
+.include-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 5px;
+}
+
+.include-preset-btn {
+    background: rgba(81, 207, 102, 0.2);
+    color: white;
+    border: 1px solid rgba(81, 207, 102, 0.3);
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.include-preset-btn:hover {
+    background: rgba(81, 207, 102, 0.3);
+    transform: translateY(-1px);
+}
+
+.include-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+    min-height: 20px;
+}
+
+.include-tag {
+    display: flex;
+    align-items: center;
+    background: linear-gradient(135deg, #51cf66, #37b24d);
+    color: white;
+    padding: 4px 8px 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    gap: 6px;
+    animation: fadeInScale 0.3s ease;
+}
+
+.include-keyword {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.remove-include {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 2px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+}
+
+.remove-include:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.include-controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.include-control-btn {
+    background: rgba(81, 207, 102, 0.15);
+    color: white;
+    border: 1px solid rgba(81, 207, 102, 0.3);
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.include-control-btn:hover {
+    background: rgba(81, 207, 102, 0.25);
+    transform: translateY(-1px);
+}
+
+.include-help {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-style: italic;
+    margin-top: 5px;
+}
+
+/* Dark theme support for include filters */
+body.dark-theme .include-filter-container {
+    background: rgba(81, 207, 102, 0.1);
+    border-color: rgba(81, 207, 102, 0.15);
+}
+
+body.dark-theme .include-filter-label {
+    color: rgba(224, 224, 224, 0.9);
+}
+
+body.dark-theme .include-input {
+    background: rgba(40, 40, 60, 0.9);
+    color: #e0e0e0;
+    border: 1px solid rgba(81, 207, 102, 0.2);
+}
+
+body.dark-theme .include-input:focus {
+    background: rgba(60, 60, 80, 0.9);
+    border-color: rgba(81, 207, 102, 0.3);
+}
+
+body.dark-theme .include-preset-btn {
+    background: rgba(81, 207, 102, 0.15);
+    color: #e0e0e0;
+    border-color: rgba(81, 207, 102, 0.2);
+}
+
+body.dark-theme .include-preset-btn:hover {
+    background: rgba(81, 207, 102, 0.25);
+}
+
+body.dark-theme .include-control-btn {
+    background: rgba(81, 207, 102, 0.15);
+    color: #e0e0e0;
+    border-color: rgba(81, 207, 102, 0.2);
+}
+
+body.dark-theme .include-control-btn:hover {
+    background: rgba(81, 207, 102, 0.25);
+}
+
+body.dark-theme .include-help {
+    color: rgba(224, 224, 224, 0.6);
+}
+
 .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -1220,9 +1432,44 @@ body.dark-theme .exclusion-help {
         text-align: center;
     }
     
-    .exclusion-filter-container {
+    .include-filter-container {
         grid-column: 1 / -1;
         grid-row: 5;
+        margin-top: 12px;
+        padding: 12px;
+    }
+    
+    .include-input-wrapper {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .include-input {
+        width: 100%;
+    }
+    
+    .add-include-btn {
+        align-self: center;
+        min-width: 120px;
+    }
+    
+    .include-presets {
+        justify-content: center;
+    }
+    
+    .include-controls {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .include-control-btn {
+        text-align: center;
+        justify-content: center;
+    }
+    
+    .exclusion-filter-container {
+        grid-column: 1 / -1;
+        grid-row: 6;
         margin-top: 12px;
         padding: 12px;
     }
