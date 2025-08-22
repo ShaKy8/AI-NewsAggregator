@@ -11,6 +11,9 @@ class NewsAggregator {
         this.autoRefreshInterval = null;
         this.searchQuery = '';
         this.trendingTopics = [];
+        this.excludedKeywords = JSON.parse(localStorage.getItem('excludedKeywords') || '[]');
+        this.showHiddenArticles = false;
+        this.hiddenArticlesCount = 0;
         this.init();
     }
 
@@ -21,6 +24,8 @@ class NewsAggregator {
         this.setupAutoRefresh();
         this.updateSourcesCount();
         this.startRealTimeClock();
+        this.setupStickyHeader();
+        this.renderExclusionTags();
         this.loadNews();
         this.loadDynamicSources();
     }
@@ -63,7 +68,14 @@ class NewsAggregator {
             if (e.key === 'Escape') {
                 this.closeSavedModal();
                 this.closeAboutModal();
+                this.closeArticlePreview();
                 this.closeMobileMenu();
+            }
+            
+            // Keyboard navigation for article cards
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                this.handleArticleNavigation(e.key);
+                e.preventDefault();
             }
         });
         
@@ -78,6 +90,32 @@ class NewsAggregator {
         document.getElementById('ageFilter').addEventListener('change', (e) => {
             this.filterByAge(e.target.value);
         });
+        
+        // Exclusion filter event listeners
+        document.getElementById('exclusionInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.addExclusionKeyword();
+            }
+        });
+        
+        document.getElementById('addExclusionBtn').addEventListener('click', () => {
+            this.addExclusionKeyword();
+        });
+        
+        document.getElementById('showHiddenBtn').addEventListener('click', () => {
+            this.toggleHiddenArticles();
+        });
+        
+        document.getElementById('clearExclusionsBtn').addEventListener('click', () => {
+            this.clearAllExclusions();
+        });
+        
+        // Preset button event listeners
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.addExclusionKeyword(e.target.dataset.keyword);
+            });
+        });
     }
 
     async loadNews() {
@@ -91,6 +129,7 @@ class NewsAggregator {
             this.applyCurrentFilters();
             this.renderNews();
             this.updateStats();
+            this.updateFilterCounts();
             this.generateTrendingTopics();
         } catch (error) {
             console.error('Error loading news:', error);
@@ -154,12 +193,18 @@ class NewsAggregator {
         this.currentFilter = filter;
         
         document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.filter === filter);
+            const isActive = btn.dataset.filter === filter;
+            btn.classList.toggle('active', isActive);
+            btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
         });
 
         this.applyCurrentFilters();
         this.renderNews();
         this.updateStats();
+        this.updateFilterCounts();
+        
+        // Announce filter change to screen readers
+        this.announceToScreenReader(`Filtered to ${filter === 'all' ? 'all articles' : filter + ' articles'}. Showing ${this.filteredArticles.length} articles.`);
     }
 
     renderNews() {
@@ -199,44 +244,48 @@ class NewsAggregator {
         const combinedSummary = article.aiSummary || article.summary || '';
         
         return `
-            <div class="news-card ${isSaved ? 'saved' : ''} ${isRead ? 'read' : ''} ${article.priority ? 'priority-' + article.priority : ''}" data-article-id="${article.id}">
+            <article class="news-card ${isSaved ? 'saved' : ''} ${isRead ? 'read' : ''} ${article.priority ? 'priority-' + article.priority : ''}" data-article-id="${article.id}" role="article" aria-labelledby="title-${article.id}">
                 <!-- Save button (always visible on mobile) -->
                 <div class="card-actions">
-                    <button class="action-btn save-btn ${isSaved ? 'saved' : ''}" title="${isSaved ? 'Remove from saved' : 'Save article'}">
-                        <i class="${isSaved ? 'fas fa-bookmark' : 'far fa-bookmark'}"></i>
+                    <button class="action-btn save-btn ${isSaved ? 'saved' : ''}" 
+                            aria-label="${isSaved ? 'Remove from saved articles' : 'Save article for later'}"
+                            title="${isSaved ? 'Remove from saved' : 'Save article'}">
+                        <i class="${isSaved ? 'fas fa-bookmark' : 'far fa-bookmark'}" aria-hidden="true"></i>
                     </button>
                 </div>
                 
                 <!-- 1. Source and Category -->
                 <div class="card-header-simple">
-                    <span class="source-badge">${article.source}</span>
-                    <span class="category-badge">
-                        <i class="${categoryIcon}"></i>
+                    <span class="source-badge" aria-label="Source: ${article.source}">${article.source}</span>
+                    <span class="category-badge" aria-label="Category: ${article.category}">
+                        <i class="${categoryIcon}" aria-hidden="true"></i>
                         ${article.category}
                     </span>
                     ${this.renderPriorityBadges(article)}
                 </div>
                 
                 <!-- 2. Article Title (Primary CTA) -->
-                <h3 class="news-title">
-                    <a href="${article.link}" target="_blank" rel="noopener noreferrer" onclick="newsAggregator.markAsRead('${article.id}')">
+                <h3 class="news-title" id="title-${article.id}">
+                    <a href="javascript:void(0)" 
+                       onclick="newsAggregator.showArticlePreview('${article.id}')"
+                       aria-describedby="summary-${article.id} meta-${article.id}">
                         ${this.escapeHtml(article.title)}
                     </a>
                 </h3>
                 
                 <!-- 3. Summary Text -->
-                <div class="news-summary">
+                <div class="news-summary" id="summary-${article.id}">
                     ${this.escapeHtml(this.truncateText(combinedSummary, 120))}
                 </div>
                 
                 <!-- 4. Time and Reading Estimate -->
-                <div class="card-footer-simple">
-                    <span class="article-meta">
-                        <i class="fas fa-clock"></i>
+                <div class="card-footer-simple" id="meta-${article.id}">
+                    <span class="article-meta" aria-label="Published ${timeAgo}, estimated ${readingTime} minute read">
+                        <i class="fas fa-clock" aria-hidden="true"></i>
                         ${timeAgo} • ${readingTime} min read
                     </span>
                 </div>
-            </div>
+            </article>
         `;
     }
 
@@ -328,6 +377,47 @@ class NewsAggregator {
             minute: '2-digit'
         });
         document.getElementById('lastUpdate').textContent = lastUpdate;
+    }
+
+    updateFilterCounts() {
+        const allCount = this.articles.length;
+        const techCount = this.articles.filter(article => article.category === 'Technology').length;
+        const securityCount = this.articles.filter(article => article.category === 'Cybersecurity').length;
+        const aiCount = this.articles.filter(article => this.isAIRelated(article)).length;
+
+        // Update button text with counts
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            const filter = btn.dataset.filter;
+            const icon = btn.querySelector('i');
+            const text = btn.childNodes[btn.childNodes.length - 1];
+            
+            let count = 0;
+            let label = '';
+            
+            switch (filter) {
+                case 'all':
+                    count = allCount;
+                    label = 'All';
+                    break;
+                case 'Technology':
+                    count = techCount;
+                    label = 'Tech';
+                    break;
+                case 'Cybersecurity':
+                    count = securityCount;
+                    label = 'Security';
+                    break;
+                case 'AI':
+                    count = aiCount;
+                    label = 'AI';
+                    break;
+            }
+            
+            // Update the text content while preserving the icon
+            if (text && text.nodeType === Node.TEXT_NODE) {
+                text.textContent = ` ${label} (${count})`;
+            }
+        });
     }
 
     async updateSourcesCount() {
@@ -440,6 +530,7 @@ class NewsAggregator {
     
     applyCurrentFilters() {
         let filtered = [...this.articles];
+        let excluded = [];
         
         if (this.currentFilter !== 'all') {
             if (this.currentFilter === 'AI') {
@@ -462,7 +553,18 @@ class NewsAggregator {
             );
         }
         
-        this.filteredArticles = filtered;
+        // Apply exclusion filters (unless showing hidden articles)
+        if (this.excludedKeywords.length > 0 && !this.showHiddenArticles) {
+            const beforeExclusionCount = filtered.length;
+            filtered = filtered.filter(article => !this.isArticleExcluded(article));
+            excluded = this.articles.filter(article => this.isArticleExcluded(article));
+            this.hiddenArticlesCount = beforeExclusionCount - filtered.length;
+        } else {
+            this.hiddenArticlesCount = 0;
+        }
+        
+        this.filteredArticles = this.showHiddenArticles ? [...filtered, ...excluded] : filtered;
+        this.updateHiddenControls();
     }
     
     isAIRelated(article) {
@@ -481,6 +583,136 @@ class NewsAggregator {
         
         return aiKeywords.some(keyword => searchText.includes(keyword));
     }
+
+    isArticleExcluded(article) {
+        if (this.excludedKeywords.length === 0) return false;
+        
+        const searchText = (article.title + ' ' + (article.summary || '') + ' ' + (article.aiSummary || '')).toLowerCase();
+        
+        return this.excludedKeywords.some(keyword => {
+            const keywordLower = keyword.toLowerCase().trim();
+            
+            // Handle exact phrases (quoted terms)
+            if (keywordLower.startsWith('"') && keywordLower.endsWith('"')) {
+                const phrase = keywordLower.slice(1, -1);
+                return searchText.includes(phrase);
+            }
+            
+            // Handle wildcards
+            if (keywordLower.includes('*')) {
+                const regex = new RegExp(keywordLower.replace(/\*/g, '.*'), 'i');
+                return regex.test(searchText);
+            }
+            
+            // Simple keyword matching
+            return searchText.includes(keywordLower);
+        });
+    }
+
+    addExclusionKeyword(keyword = null) {
+        const input = document.getElementById('exclusionInput');
+        const keywordToAdd = keyword || input.value.trim();
+        
+        if (!keywordToAdd) return;
+        
+        // Parse multiple keywords separated by commas
+        const keywords = keywordToAdd.split(',').map(k => k.trim()).filter(k => k);
+        
+        keywords.forEach(kw => {
+            if (!this.excludedKeywords.includes(kw)) {
+                this.excludedKeywords.push(kw);
+            }
+        });
+        
+        input.value = '';
+        this.saveExclusionKeywords();
+        this.renderExclusionTags();
+        this.applyCurrentFilters();
+        this.renderNews();
+        this.updateStats();
+        this.updateFilterCounts();
+        
+        const addedCount = keywords.length;
+        this.announceToScreenReader(`Added ${addedCount} exclusion filter${addedCount > 1 ? 's' : ''}. Now hiding articles containing: ${keywords.join(', ')}`);
+    }
+
+    removeExclusionKeyword(keyword) {
+        this.excludedKeywords = this.excludedKeywords.filter(k => k !== keyword);
+        this.saveExclusionKeywords();
+        this.renderExclusionTags();
+        this.applyCurrentFilters();
+        this.renderNews();
+        this.updateStats();
+        this.updateFilterCounts();
+        
+        this.announceToScreenReader(`Removed exclusion filter: ${keyword}`);
+    }
+
+    saveExclusionKeywords() {
+        localStorage.setItem('excludedKeywords', JSON.stringify(this.excludedKeywords));
+    }
+
+    renderExclusionTags() {
+        const container = document.getElementById('exclusionTags');
+        
+        if (this.excludedKeywords.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+        
+        container.innerHTML = this.excludedKeywords.map(keyword => `
+            <span class="exclusion-tag">
+                <span class="exclusion-keyword">${this.escapeHtml(keyword)}</span>
+                <button class="remove-exclusion" onclick="newsAggregator.removeExclusionKeyword('${this.escapeHtml(keyword)}')" 
+                        aria-label="Remove ${this.escapeHtml(keyword)} exclusion">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </span>
+        `).join('');
+    }
+
+    updateHiddenControls() {
+        const showHiddenBtn = document.getElementById('showHiddenBtn');
+        const clearExclusionsBtn = document.getElementById('clearExclusionsBtn');
+        const hiddenCountSpan = document.getElementById('hiddenCount');
+        
+        if (this.excludedKeywords.length > 0) {
+            showHiddenBtn.style.display = 'inline-flex';
+            clearExclusionsBtn.style.display = 'inline-flex';
+            hiddenCountSpan.textContent = this.hiddenArticlesCount;
+            
+            const hiddenText = this.showHiddenArticles ? 'Hide Excluded' : 'Show Hidden';
+            const hiddenIcon = this.showHiddenArticles ? 'fa-eye-slash' : 'fa-eye';
+            showHiddenBtn.innerHTML = `<i class="fas ${hiddenIcon}"></i> ${hiddenText} (${this.hiddenArticlesCount})`;
+        } else {
+            showHiddenBtn.style.display = 'none';
+            clearExclusionsBtn.style.display = 'none';
+        }
+    }
+
+    toggleHiddenArticles() {
+        this.showHiddenArticles = !this.showHiddenArticles;
+        this.applyCurrentFilters();
+        this.renderNews();
+        this.updateStats();
+        
+        const action = this.showHiddenArticles ? 'Showing' : 'Hiding';
+        this.announceToScreenReader(`${action} excluded articles`);
+    }
+
+    clearAllExclusions() {
+        const count = this.excludedKeywords.length;
+        this.excludedKeywords = [];
+        this.showHiddenArticles = false;
+        this.saveExclusionKeywords();
+        this.renderExclusionTags();
+        this.applyCurrentFilters();
+        this.renderNews();
+        this.updateStats();
+        this.updateFilterCounts();
+        
+        this.announceToScreenReader(`Cleared all ${count} exclusion filters`);
+    }
     
     handleSearch(query) {
         this.searchQuery = query;
@@ -490,6 +722,14 @@ class NewsAggregator {
         this.applyCurrentFilters();
         this.renderNews();
         this.updateStats();
+        this.updateFilterCounts();
+        
+        // Announce search results to screen readers
+        if (query) {
+            setTimeout(() => {
+                this.announceToScreenReader(`Search for "${query}" found ${this.filteredArticles.length} articles`);
+            }, 500);
+        }
     }
     
     clearSearch() {
@@ -499,6 +739,10 @@ class NewsAggregator {
         this.applyCurrentFilters();
         this.renderNews();
         this.updateStats();
+        this.updateFilterCounts();
+        
+        // Announce clearing of search
+        this.announceToScreenReader(`Search cleared. Showing all ${this.filteredArticles.length} articles`);
     }
     
     filterByAge(ageFilter) {
@@ -506,6 +750,7 @@ class NewsAggregator {
         this.applyCurrentFilters();
         this.renderNews();
         this.updateStats();
+        this.updateFilterCounts();
     }
     
     isArticleInAgeRange(article, ageFilter) {
@@ -598,6 +843,54 @@ class NewsAggregator {
             }, 15 * 60 * 1000);
         }
     }
+
+    setupStickyHeader() {
+        let lastScrollY = 0;
+        let isHeaderVisible = true;
+        const header = document.querySelector('.header');
+        
+        // Only apply on mobile devices
+        const checkMobile = () => window.innerWidth <= 768;
+        
+        const handleScroll = () => {
+            if (!checkMobile()) return;
+            
+            const currentScrollY = window.scrollY;
+            const scrollDiff = currentScrollY - lastScrollY;
+            
+            // Show header when scrolling up or at top
+            if (scrollDiff < -5 || currentScrollY < 100) {
+                if (!isHeaderVisible) {
+                    header.classList.remove('header-hidden');
+                    isHeaderVisible = true;
+                }
+            }
+            // Hide header when scrolling down significantly
+            else if (scrollDiff > 5 && currentScrollY > 150) {
+                if (isHeaderVisible) {
+                    header.classList.add('header-hidden');
+                    isHeaderVisible = false;
+                }
+            }
+            
+            lastScrollY = currentScrollY;
+        };
+        
+        // Throttle scroll events for better performance
+        let scrollTimeout;
+        window.addEventListener('scroll', () => {
+            if (scrollTimeout) clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(handleScroll, 10);
+        });
+        
+        // Reset header visibility on resize
+        window.addEventListener('resize', () => {
+            if (!checkMobile() && header.classList.contains('header-hidden')) {
+                header.classList.remove('header-hidden');
+                isHeaderVisible = true;
+            }
+        });
+    }
     
     saveArticle(articleId) {
         const article = this.articles.find(a => a.id === articleId);
@@ -607,12 +900,14 @@ class NewsAggregator {
         if (existingIndex > -1) {
             this.savedArticles.splice(existingIndex, 1);
             this.showNotification('Article removed from saved', 'info');
+            this.announceToScreenReader(`Removed "${article.title}" from saved articles`);
         } else {
             this.savedArticles.push({
                 ...article,
                 savedAt: new Date().toISOString()
             });
             this.showNotification('Article saved successfully');
+            this.announceToScreenReader(`Saved "${article.title}" for later reading`);
         }
         
         localStorage.setItem('savedArticles', JSON.stringify(this.savedArticles));
@@ -951,6 +1246,103 @@ class NewsAggregator {
 
     closeMobileMenu() {
         document.getElementById('mobileMenuOverlay').style.display = 'none';
+    }
+
+    showArticlePreview(articleId) {
+        const article = this.articles.find(a => a.id === articleId);
+        if (!article) return;
+
+        // Update modal content
+        document.getElementById('previewSource').textContent = article.source;
+        document.getElementById('previewCategory').textContent = article.category;
+        document.getElementById('previewTime').textContent = this.getTimeAgo(article.scraped);
+        document.getElementById('previewTitle').textContent = article.title;
+        
+        // Use AI summary if available, otherwise use regular summary, with fallback
+        const content = article.aiSummary || article.summary || 'No summary available for this article.';
+        document.getElementById('previewContent').textContent = content;
+
+        // Update save button state
+        const saveBtn = document.getElementById('previewSaveBtn');
+        const isSaved = this.savedArticles.some(saved => saved.id === articleId);
+        
+        if (isSaved) {
+            saveBtn.classList.add('saved');
+            saveBtn.innerHTML = '<i class="fas fa-bookmark"></i> Remove from Saved';
+        } else {
+            saveBtn.classList.remove('saved');
+            saveBtn.innerHTML = '<i class="fas fa-bookmark"></i> Save Article';
+        }
+
+        // Set up event listeners for modal actions
+        saveBtn.onclick = () => {
+            this.saveArticle(articleId);
+            // Update button state after saving
+            const newIsSaved = this.savedArticles.some(saved => saved.id === articleId);
+            if (newIsSaved) {
+                saveBtn.classList.add('saved');
+                saveBtn.innerHTML = '<i class="fas fa-bookmark"></i> Remove from Saved';
+            } else {
+                saveBtn.classList.remove('saved');
+                saveBtn.innerHTML = '<i class="fas fa-bookmark"></i> Save Article';
+            }
+        };
+
+        document.getElementById('previewReadBtn').onclick = () => {
+            this.markAsRead(articleId);
+            window.open(article.link, '_blank', 'noopener,noreferrer');
+            this.closeArticlePreview();
+        };
+
+        // Show modal
+        document.getElementById('articlePreviewModal').style.display = 'flex';
+    }
+
+    closeArticlePreview() {
+        document.getElementById('articlePreviewModal').style.display = 'none';
+    }
+
+    announceToScreenReader(message) {
+        // Create or use existing aria-live region for announcements
+        let announcer = document.getElementById('sr-announcer');
+        if (!announcer) {
+            announcer = document.createElement('div');
+            announcer.id = 'sr-announcer';
+            announcer.setAttribute('aria-live', 'polite');
+            announcer.setAttribute('aria-atomic', 'true');
+            announcer.style.cssText = 'position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden;';
+            document.body.appendChild(announcer);
+        }
+        
+        // Clear and set new message
+        announcer.textContent = '';
+        setTimeout(() => {
+            announcer.textContent = message;
+        }, 100);
+    }
+
+    handleArticleNavigation(direction) {
+        const articles = document.querySelectorAll('.news-card a[href="javascript:void(0)"]');
+        if (articles.length === 0) return;
+        
+        const currentFocus = document.activeElement;
+        let currentIndex = -1;
+        
+        // Find current focused article
+        articles.forEach((article, index) => {
+            if (article === currentFocus) {
+                currentIndex = index;
+            }
+        });
+        
+        // Navigate to next/previous article
+        if (direction === 'ArrowDown') {
+            const nextIndex = (currentIndex + 1) % articles.length;
+            articles[nextIndex].focus();
+        } else if (direction === 'ArrowUp') {
+            const prevIndex = currentIndex <= 0 ? articles.length - 1 : currentIndex - 1;
+            articles[prevIndex].focus();
+        }
     }
 }
 

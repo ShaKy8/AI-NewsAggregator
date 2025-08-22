@@ -1,0 +1,28 @@
+::To Do::
+0. Auto start on reboot (DONE)
+1. Add UX subagent and analyze
+2. Add Code Reviewer subagent
+3. Add Debugger subagent
+4. Add Data Scientist subagent
+
+
+
+ Service Management Commands:
+  # Check service status
+  systemctl --user status news-aggregator.service
+
+  # Stop the service
+  systemctl --user stop news-aggregator.service
+
+  # Start the service
+  systemctl --user start news-aggregator.service
+
+  # Restart the service
+  systemctl --user restart news-aggregator.service
+
+  # View logs
+  journalctl --user -u news-aggregator.service -f
+
+  The News Aggregator is now running at http://localhost:8080 and will automatically start on every system reboot, ensuring your news aggregation service with the age filter feature
+  is always available!
+
