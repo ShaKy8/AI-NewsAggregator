@@ -3,6 +3,7 @@ class NewsAggregator {
         this.articles = [];
         this.filteredArticles = [];
         this.currentFilter = 'all';
+        this.currentAgeFilter = 'all';
         this.savedArticles = JSON.parse(localStorage.getItem('savedArticles') || '[]');
         this.readArticles = JSON.parse(localStorage.getItem('readArticles') || '[]');
         this.isDarkTheme = localStorage.getItem('darkTheme') === 'true';
@@ -71,6 +72,11 @@ class NewsAggregator {
             if (e.target.id === 'mobileMenuOverlay') {
                 this.closeMobileMenu();
             }
+        });
+        
+        // Age filter event listener
+        document.getElementById('ageFilter').addEventListener('change', (e) => {
+            this.filterByAge(e.target.value);
         });
     }
 
@@ -310,7 +316,12 @@ class NewsAggregator {
     }
 
     updateStats() {
-        document.getElementById('totalArticles').textContent = this.filteredArticles.length;
+        const total = this.filteredArticles.length;
+        const totalText = total === this.articles.length ? 
+            total.toString() : 
+            `${total} of ${this.articles.length}`;
+        
+        document.getElementById('totalArticles').textContent = totalText;
         
         const lastUpdate = new Date().toLocaleTimeString('en-US', {
             hour: '2-digit',
@@ -431,7 +442,15 @@ class NewsAggregator {
         let filtered = [...this.articles];
         
         if (this.currentFilter !== 'all') {
-            filtered = filtered.filter(article => article.category === this.currentFilter);
+            if (this.currentFilter === 'AI') {
+                filtered = filtered.filter(article => this.isAIRelated(article));
+            } else {
+                filtered = filtered.filter(article => article.category === this.currentFilter);
+            }
+        }
+        
+        if (this.currentAgeFilter !== 'all') {
+            filtered = filtered.filter(article => this.isArticleInAgeRange(article, this.currentAgeFilter));
         }
         
         if (this.searchQuery) {
@@ -444,6 +463,23 @@ class NewsAggregator {
         }
         
         this.filteredArticles = filtered;
+    }
+    
+    isAIRelated(article) {
+        const aiKeywords = [
+            'claude code', 'claude', 'anthropic',
+            'ai', 'artificial intelligence', 'machine learning', 'ml',
+            'chatgpt', 'gpt', 'openai', 'generative ai',
+            'neural network', 'deep learning', 'llm', 'large language model',
+            'automation', 'robot', 'robotics', 'autonomous',
+            'computer vision', 'natural language processing', 'nlp',
+            'algorithm', 'predictive', 'intelligent', 'smart ai',
+            'copilot', 'assistant ai', 'ai assistant'
+        ];
+        
+        const searchText = (article.title + ' ' + (article.summary || '')).toLowerCase();
+        
+        return aiKeywords.some(keyword => searchText.includes(keyword));
     }
     
     handleSearch(query) {
@@ -463,6 +499,43 @@ class NewsAggregator {
         this.applyCurrentFilters();
         this.renderNews();
         this.updateStats();
+    }
+    
+    filterByAge(ageFilter) {
+        this.currentAgeFilter = ageFilter;
+        this.applyCurrentFilters();
+        this.renderNews();
+        this.updateStats();
+    }
+    
+    isArticleInAgeRange(article, ageFilter) {
+        if (!article.scraped) return true;
+        
+        try {
+            const articleDate = new Date(article.scraped);
+            const now = new Date();
+            const diffInHours = (now - articleDate) / (1000 * 60 * 60);
+            
+            switch (ageFilter) {
+                case '1h':
+                    return diffInHours <= 1;
+                case '4h':
+                    return diffInHours <= 4;
+                case 'today':
+                    const today = new Date();
+                    return articleDate.toDateString() === today.toDateString();
+                case '1d':
+                    return diffInHours <= 24;
+                case '2d':
+                    return diffInHours <= 48;
+                case 'all':
+                default:
+                    return true;
+            }
+        } catch (error) {
+            console.warn('Error parsing article date:', error);
+            return true;
+        }
     }
     
     toggleTheme() {

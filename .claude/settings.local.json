@@ -37,8 +37,13 @@
       "Bash(find:*)",
       "Bash(node:*)",
       "Bash(lsof:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(sudo cp:*)",
+      "Bash(loginctl:*)"
     ],
-    "deny": []
+    "deny": [],
+    "additionalDirectories": [
+      "/etc/systemd/system"
+    ]
   }
 }
