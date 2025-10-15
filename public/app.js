@@ -36,6 +36,9 @@ class NewsAggregator {
         // Semantic search engine
         this.semanticSearch = new SemanticSearchEngine();
 
+        // Reading analytics
+        this.analytics = new ReadingAnalytics();
+
         // AI Summary settings
         this.expandedAISummaries = new Set(); // Track which AI summaries are expanded
         this.generatingAISummaries = new Set(); // Track which summaries are being generated
@@ -1300,6 +1303,15 @@ class NewsAggregator {
         this.updateStats();
         this.updateFilterCounts();
 
+        // Track search in analytics
+        if (query && query.trim().length > 0) {
+            this.analytics.trackEvent('search', {
+                query: query,
+                resultsCount: this.filteredArticles.length,
+                semanticEnabled: this.semanticSearch.isEnabled()
+            });
+        }
+
         // Announce search results to screen readers
         if (query) {
             setTimeout(() => {
@@ -1605,6 +1617,13 @@ class NewsAggregator {
             });
             this.showNotification('Article saved successfully');
             this.announceToScreenReader(`Saved "${article.title}" for later reading`);
+
+            // Track in analytics
+            this.analytics.trackEvent('article_saved', {
+                articleId: article.id,
+                category: article.category,
+                source: article.source
+            });
         }
         
         localStorage.setItem('savedArticles', JSON.stringify(this.savedArticles));
@@ -1620,6 +1639,18 @@ class NewsAggregator {
         if (!this.readArticles.includes(articleId)) {
             this.readArticles.push(articleId);
             localStorage.setItem('readArticles', JSON.stringify(this.readArticles));
+
+            // Track in analytics
+            const article = this.articles.find(a => a.id === articleId);
+            if (article) {
+                const readingTime = this.calculateReadingTime(article.summary || '') * 60; // Convert to seconds
+                this.analytics.trackEvent('article_read', {
+                    articleId: article.id,
+                    category: article.category,
+                    source: article.source,
+                    readingTime: readingTime
+                });
+            }
         }
     }
     
