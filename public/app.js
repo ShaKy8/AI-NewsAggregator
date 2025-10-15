@@ -107,6 +107,7 @@ class NewsAggregator {
         if (autoRefreshToggle) autoRefreshToggle.addEventListener('click', () => this.toggleAutoRefresh());
         if (aboutBtn) aboutBtn.addEventListener('click', () => this.showAboutModal());
         
+        document.getElementById('analyticsBtn').addEventListener('click', () => this.showAnalyticsDashboard());
         document.getElementById('savedArticlesBtn').addEventListener('click', () => this.showSavedArticles());
         document.getElementById('collectionsBtn').addEventListener('click', () => this.showCollectionsManager());
 
@@ -2255,6 +2256,228 @@ class NewsAggregator {
 
     closeCollectionsManager() {
         document.getElementById('collectionsModal').style.display = 'none';
+    }
+
+    // Analytics Dashboard Methods
+    showAnalyticsDashboard() {
+        this.renderAnalyticsDashboard();
+        document.getElementById('analyticsModal').style.display = 'flex';
+    }
+
+    closeAnalytics() {
+        document.getElementById('analyticsModal').style.display = 'none';
+        // Destroy charts to prevent memory leaks
+        if (this.analyticsCharts) {
+            Object.values(this.analyticsCharts).forEach(chart => {
+                if (chart) chart.destroy();
+            });
+            this.analyticsCharts = {};
+        }
+    }
+
+    renderAnalyticsDashboard() {
+        const analytics = this.analytics;
+
+        // Get all analytics data
+        const stats = analytics.data.stats;
+        const streaks = analytics.data.streaks;
+        const todayReads = analytics.getArticlesReadToday();
+        const goals = analytics.data.goals;
+
+        // Update overview cards
+        document.getElementById('totalReads').textContent = stats.totalArticlesRead;
+        document.getElementById('todayReads').textContent = todayReads;
+        document.getElementById('currentStreak').textContent = streaks.current;
+
+        // Format time spent
+        const totalMinutes = Math.floor(stats.totalTimeSpent / 60);
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+        const timeText = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+        document.getElementById('totalTime').textContent = timeText;
+
+        // Update goal progress
+        const goalProgress = (todayReads / goals.dailyArticles) * 100;
+        document.getElementById('goalProgressBar').style.width = `${Math.min(goalProgress, 100)}%`;
+        document.getElementById('goalText').textContent = `${todayReads} / ${goals.dailyArticles} articles`;
+
+        // Update reading patterns
+        const timePatterns = analytics.getTimePatterns();
+        document.getElementById('peakHour').textContent = timePatterns.peakHour || '-';
+        document.getElementById('mostActiveDay').textContent = timePatterns.mostActiveDay || '-';
+        document.getElementById('avgDaily').textContent = timePatterns.averagePerDay.toFixed(1);
+        document.getElementById('longestStreak').textContent = `${streaks.longest} days`;
+
+        // Render insights
+        this.renderInsights();
+
+        // Initialize charts
+        this.initializeAnalyticsCharts();
+    }
+
+    renderInsights() {
+        const insights = this.analytics.getInsights();
+        const container = document.getElementById('insightsContainer');
+        const section = document.getElementById('insightsSection');
+
+        if (insights.length === 0) {
+            section.style.display = 'none';
+            return;
+        }
+
+        section.style.display = 'block';
+        container.innerHTML = insights.map(insight => `
+            <div class="insight-card insight-${insight.type}">
+                <span class="insight-icon">${insight.icon}</span>
+                <div class="insight-content">
+                    <div class="insight-title">${insight.title}</div>
+                    <div class="insight-message">${insight.message}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    initializeAnalyticsCharts() {
+        // Destroy existing charts if any
+        if (this.analyticsCharts) {
+            Object.values(this.analyticsCharts).forEach(chart => {
+                if (chart) chart.destroy();
+            });
+        }
+
+        this.analyticsCharts = {};
+
+        // Activity chart (line chart - last 30 days)
+        const activityData = this.analytics.getActivityByDate(30);
+        const activityCtx = document.getElementById('activityChart');
+        if (activityCtx) {
+            this.analyticsCharts.activity = new Chart(activityCtx, {
+                type: 'line',
+                data: {
+                    labels: activityData.map(d => d.date),
+                    datasets: [{
+                        label: 'Articles Read',
+                        data: activityData.map(d => d.count),
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Category distribution (doughnut chart)
+        const categoryData = this.analytics.getCategoryDistribution();
+        const categoryCtx = document.getElementById('categoryChart');
+        if (categoryCtx && categoryData.length > 0) {
+            this.analyticsCharts.category = new Chart(categoryCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: categoryData.map(c => c.name),
+                    datasets: [{
+                        data: categoryData.map(c => c.count),
+                        backgroundColor: [
+                            '#667eea',
+                            '#764ba2',
+                            '#f093fb',
+                            '#4facfe',
+                            '#43e97b',
+                            '#fa709a',
+                            '#feca57'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Top sources (horizontal bar chart)
+        const sourceData = this.analytics.getSourceDistribution().slice(0, 10);
+        const sourcesCtx = document.getElementById('sourcesChart');
+        if (sourcesCtx && sourceData.length > 0) {
+            this.analyticsCharts.sources = new Chart(sourcesCtx, {
+                type: 'bar',
+                data: {
+                    labels: sourceData.map(s => s.name),
+                    datasets: [{
+                        label: 'Articles Read',
+                        data: sourceData.map(s => s.count),
+                        backgroundColor: '#667eea'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    exportAnalytics(format) {
+        const data = this.analytics.exportData(format);
+        const blob = new Blob([data], {
+            type: format === 'json' ? 'application/json' : 'text/csv'
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `reading-analytics-${new Date().toISOString().split('T')[0]}.${format}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        this.showNotification(`Analytics exported as ${format.toUpperCase()}`, 'success');
+    }
+
+    clearAnalytics() {
+        if (!confirm('Are you sure you want to clear all analytics data? This cannot be undone.')) {
+            return;
+        }
+
+        this.analytics.clearAllData();
+        this.renderAnalyticsDashboard();
+        this.showNotification('All analytics data cleared', 'success');
     }
 
     renderCollectionsList() {

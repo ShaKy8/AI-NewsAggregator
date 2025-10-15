@@ -4560,3 +4560,332 @@ body.dark-theme .no-similar-articles i {
         justify-content: center;
     }
 }
+
+/* ==================== ANALYTICS DASHBOARD STYLES ==================== */
+
+.analytics-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+}
+
+.analytics-modal-content {
+    max-width: 900px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.analytics-modal-body {
+    padding: 0;
+}
+
+/* Overview Cards */
+.analytics-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+}
+
+.stat-card {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: white;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+}
+
+/* Analytics Sections */
+.analytics-section {
+    padding: 25px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.analytics-section:last-child {
+    border-bottom: none;
+}
+
+.analytics-section h4 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.analytics-section h4 i {
+    color: #667eea;
+}
+
+/* Goal Progress */
+.goal-progress {
+    margin-top: 15px;
+}
+
+.goal-progress-bar {
+    width: 100%;
+    height: 12px;
+    background: var(--hover-bg);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.goal-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    transition: width 0.3s ease;
+    border-radius: 6px;
+}
+
+.goal-text {
+    text-align: center;
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* Insights */
+.insights-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.insight-card {
+    background: var(--hover-bg);
+    padding: 15px;
+    border-radius: 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    border-left: 3px solid #667eea;
+}
+
+.insight-card.insight-streak {
+    border-left-color: #f093fb;
+}
+
+.insight-card.insight-category {
+    border-left-color: #4facfe;
+}
+
+.insight-card.insight-time {
+    border-left-color: #43e97b;
+}
+
+.insight-card.insight-goal {
+    border-left-color: #feca57;
+}
+
+.insight-icon {
+    font-size: 24px;
+    line-height: 1;
+}
+
+.insight-content {
+    flex: 1;
+}
+
+.insight-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    font-size: 14px;
+}
+
+.insight-message {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* Charts */
+.chart-container {
+    position: relative;
+    height: 300px;
+    margin-top: 15px;
+}
+
+.chart-container-small {
+    height: 250px;
+}
+
+/* Reading Patterns */
+.patterns-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.pattern-card {
+    background: var(--hover-bg);
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.pattern-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.pattern-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Export Buttons */
+.export-buttons {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.export-buttons .btn-secondary {
+    flex: 1;
+    min-width: 150px;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #ff6348 0%, #fa709a 100%);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #fa709a 0%, #ff6348 100%);
+    transform: translateY(-1px);
+}
+
+/* Dark Mode Adjustments */
+body.dark-mode .stat-card {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .insight-card,
+body.dark-mode .pattern-card {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+body.dark-mode .goal-progress-bar {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive Analytics */
+@media (max-width: 768px) {
+    .analytics-modal-content {
+        width: 95%;
+        max-height: 95vh;
+    }
+
+    .analytics-overview {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        padding: 15px;
+    }
+
+    .stat-card {
+        padding: 15px;
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+    }
+
+    .stat-value {
+        font-size: 24px;
+    }
+
+    .analytics-section {
+        padding: 20px 15px;
+    }
+
+    .chart-container {
+        height: 250px;
+    }
+
+    .chart-container-small {
+        height: 200px;
+    }
+
+    .patterns-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .pattern-value {
+        font-size: 20px;
+    }
+
+    .export-buttons {
+        flex-direction: column;
+    }
+
+    .export-buttons .btn-secondary {
+        width: 100%;
+    }
+}

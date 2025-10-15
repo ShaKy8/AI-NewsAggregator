@@ -75,6 +75,9 @@
                     
                     <div class="control-buttons">
                         <!-- Always visible controls -->
+                        <button id="analyticsBtn" class="control-btn" title="Reading Analytics">
+                            <i class="fas fa-chart-line"></i>
+                        </button>
                         <button id="collectionsBtn" class="control-btn" title="Collections">
                             <i class="fas fa-folder"></i>
                             <span class="saved-count" id="collectionsCount">0</span>
@@ -248,6 +251,142 @@
                 </button>
             </div>
             <div class="modal-body" id="savedArticlesList">
+            </div>
+        </div>
+    </div>
+
+    <!-- Reading Analytics Modal -->
+    <div class="analytics-modal" id="analyticsModal" style="display: none;" role="dialog" aria-labelledby="analyticsModalTitle" aria-modal="true">
+        <div class="modal-overlay" onclick="newsAggregator.closeAnalytics()"></div>
+        <div class="modal-content analytics-modal-content">
+            <div class="modal-header">
+                <h3 id="analyticsModalTitle"><i class="fas fa-chart-line"></i> Reading Analytics</h3>
+                <button onclick="newsAggregator.closeAnalytics()" class="close-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body analytics-modal-body">
+                <!-- Overview Cards -->
+                <div class="analytics-overview">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-book-open"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="totalReads">0</div>
+                            <div class="stat-label">Articles Read</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="todayReads">0</div>
+                            <div class="stat-label">Today's Reading</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-fire"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="currentStreak">0</div>
+                            <div class="stat-label">Day Streak</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="totalTime">0m</div>
+                            <div class="stat-label">Time Spent</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Goal Progress -->
+                <div class="analytics-section">
+                    <h4><i class="fas fa-bullseye"></i> Daily Goal Progress</h4>
+                    <div class="goal-progress">
+                        <div class="goal-progress-bar">
+                            <div class="goal-progress-fill" id="goalProgressBar" style="width: 0%"></div>
+                        </div>
+                        <div class="goal-text" id="goalText">0 / 5 articles</div>
+                    </div>
+                </div>
+
+                <!-- Insights -->
+                <div class="analytics-section" id="insightsSection" style="display: none;">
+                    <h4><i class="fas fa-lightbulb"></i> Insights</h4>
+                    <div class="insights-container" id="insightsContainer">
+                        <!-- Insights will be rendered here -->
+                    </div>
+                </div>
+
+                <!-- Activity Chart -->
+                <div class="analytics-section">
+                    <h4><i class="fas fa-chart-area"></i> Reading Activity (Last 30 Days)</h4>
+                    <div class="chart-container">
+                        <canvas id="activityChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Category Distribution -->
+                <div class="analytics-section">
+                    <h4><i class="fas fa-tags"></i> Category Distribution</h4>
+                    <div class="chart-container chart-container-small">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Top Sources -->
+                <div class="analytics-section">
+                    <h4><i class="fas fa-newspaper"></i> Top Sources</h4>
+                    <div class="chart-container chart-container-small">
+                        <canvas id="sourcesChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Reading Patterns -->
+                <div class="analytics-section">
+                    <h4><i class="fas fa-clock"></i> Reading Patterns</h4>
+                    <div class="patterns-grid">
+                        <div class="pattern-card">
+                            <div class="pattern-label">Peak Reading Hour</div>
+                            <div class="pattern-value" id="peakHour">-</div>
+                        </div>
+                        <div class="pattern-card">
+                            <div class="pattern-label">Most Active Day</div>
+                            <div class="pattern-value" id="mostActiveDay">-</div>
+                        </div>
+                        <div class="pattern-card">
+                            <div class="pattern-label">Average Daily Reads</div>
+                            <div class="pattern-value" id="avgDaily">0</div>
+                        </div>
+                        <div class="pattern-card">
+                            <div class="pattern-label">Longest Streak</div>
+                            <div class="pattern-value" id="longestStreak">0 days</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Export Options -->
+                <div class="analytics-section">
+                    <h4><i class="fas fa-download"></i> Export Data</h4>
+                    <div class="export-buttons">
+                        <button class="btn-secondary" onclick="newsAggregator.exportAnalytics('json')">
+                            <i class="fas fa-file-code"></i> Export JSON
+                        </button>
+                        <button class="btn-secondary" onclick="newsAggregator.exportAnalytics('csv')">
+                            <i class="fas fa-file-csv"></i> Export CSV
+                        </button>
+                        <button class="btn-secondary btn-danger" onclick="newsAggregator.clearAnalytics()">
+                            <i class="fas fa-trash"></i> Clear All Data
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -574,6 +713,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="utils/sanitizer.js"></script>
     <script src="utils/deduplication.js"></script>
     <script src="utils/collections.js"></script>
