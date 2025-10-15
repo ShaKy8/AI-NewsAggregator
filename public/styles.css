@@ -735,7 +735,7 @@ body.dark-theme .include-help {
     border: none;
     outline: none;
     background: transparent;
-    padding: 8px 0;
+    padding: 8px 100px 8px 0;
     font-size: 0.9rem;
     width: 100%;
     color: #333;
@@ -746,12 +746,15 @@ body.dark-theme .include-help {
 }
 
 .clear-search {
+    position: absolute;
+    right: 105px;
+    top: 50%;
+    transform: translateY(-50%);
     background: none;
     border: none;
     color: #999;
     cursor: pointer;
     padding: 8px;
-    margin-left: 8px;
     border-radius: 50%;
     transition: all 0.2s ease;
     font-size: 0.8rem;
@@ -760,6 +763,7 @@ body.dark-theme .include-help {
     display: flex;
     align-items: center;
     justify-content: center;
+    z-index: 11;
 }
 
 .clear-search:hover {
@@ -4022,7 +4026,7 @@ body.dark-theme .checkbox-custom {
 /* Semantic Search Toggle */
 .semantic-toggle {
     position: absolute;
-    right: 45px;
+    right: 12px;
     top: 50%;
     transform: translateY(-50%);
     background: transparent;
@@ -4078,12 +4082,20 @@ body.dark-theme .semantic-toggle:hover {
 /* Mobile Responsive */
 @media (max-width: 768px) {
     .semantic-toggle {
-        right: 40px;
+        right: 12px;
         padding: 6px 10px;
     }
 
     .semantic-label {
         display: none;
+    }
+
+    .clear-search {
+        right: 55px;
+    }
+
+    .search-input {
+        padding-right: 75px;
     }
 }
 
