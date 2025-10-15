@@ -71,11 +71,15 @@
                     
                     <div class="control-buttons">
                         <!-- Always visible controls -->
+                        <button id="collectionsBtn" class="control-btn" title="Collections">
+                            <i class="fas fa-folder"></i>
+                            <span class="saved-count" id="collectionsCount">0</span>
+                        </button>
                         <button id="savedArticlesBtn" class="control-btn" title="Saved Articles">
                             <i class="fas fa-bookmark"></i>
                             <span class="saved-count" id="savedCount">0</span>
                         </button>
-                        
+
                         <!-- Mobile hamburger menu -->
                         <button id="mobileMenuToggle" class="control-btn mobile-menu-btn" title="More Options">
                             <i class="fas fa-bars"></i>
@@ -240,6 +244,145 @@
                 </button>
             </div>
             <div class="modal-body" id="savedArticlesList">
+            </div>
+        </div>
+    </div>
+
+    <!-- Collections Manager Modal -->
+    <div class="collections-modal" id="collectionsModal" style="display: none;" role="dialog" aria-labelledby="collectionsModalTitle" aria-modal="true">
+        <div class="modal-overlay" onclick="newsAggregator.closeCollectionsManager()"></div>
+        <div class="modal-content collections-modal-content">
+            <div class="modal-header">
+                <h3 id="collectionsModalTitle"><i class="fas fa-folder"></i> Collections</h3>
+                <button onclick="newsAggregator.closeCollectionsManager()" class="close-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Create new collection button -->
+                <button class="create-collection-btn" id="createCollectionBtn">
+                    <i class="fas fa-plus"></i> Create New Collection
+                </button>
+
+                <!-- Collections list -->
+                <div class="collections-list" id="collectionsList">
+                    <!-- Collections will be rendered here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create/Edit Collection Modal -->
+    <div class="collection-edit-modal" id="collectionEditModal" style="display: none;" role="dialog" aria-labelledby="collectionEditTitle" aria-modal="true">
+        <div class="modal-overlay" onclick="newsAggregator.closeCollectionEditor()"></div>
+        <div class="modal-content collection-edit-content">
+            <div class="modal-header">
+                <h3 id="collectionEditTitle"><i class="fas fa-folder-plus"></i> <span id="collectionEditMode">Create</span> Collection</h3>
+                <button onclick="newsAggregator.closeCollectionEditor()" class="close-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="collectionEditForm">
+                    <input type="hidden" id="editingCollectionId" value="">
+
+                    <div class="form-group">
+                        <label for="collectionName">Collection Name *</label>
+                        <input type="text" id="collectionName" class="form-input" placeholder="e.g., AI Research 2025" required maxlength="50">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="collectionDescription">Description</label>
+                        <textarea id="collectionDescription" class="form-textarea" placeholder="What is this collection about?" rows="3" maxlength="200"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Color</label>
+                        <div class="color-picker">
+                            <div class="color-option" data-color="#667eea" style="background: #667eea;"></div>
+                            <div class="color-option" data-color="#f093fb" style="background: #f093fb;"></div>
+                            <div class="color-option" data-color="#4facfe" style="background: #4facfe;"></div>
+                            <div class="color-option" data-color="#43e97b" style="background: #43e97b;"></div>
+                            <div class="color-option" data-color="#fa709a" style="background: #fa709a;"></div>
+                            <div class="color-option" data-color="#feca57" style="background: #feca57;"></div>
+                            <div class="color-option" data-color="#ff6348" style="background: #ff6348;"></div>
+                            <div class="color-option" data-color="#9c88ff" style="background: #9c88ff;"></div>
+                        </div>
+                        <input type="hidden" id="collectionColor" value="#667eea">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Icon</label>
+                        <div class="icon-picker">
+                            <div class="icon-option" data-icon="fa-folder"><i class="fas fa-folder"></i></div>
+                            <div class="icon-option" data-icon="fa-book"><i class="fas fa-book"></i></div>
+                            <div class="icon-option" data-icon="fa-flask"><i class="fas fa-flask"></i></div>
+                            <div class="icon-option" data-icon="fa-star"><i class="fas fa-star"></i></div>
+                            <div class="icon-option" data-icon="fa-heart"><i class="fas fa-heart"></i></div>
+                            <div class="icon-option" data-icon="fa-lightbulb"><i class="fas fa-lightbulb"></i></div>
+                            <div class="icon-option" data-icon="fa-rocket"><i class="fas fa-rocket"></i></div>
+                            <div class="icon-option" data-icon="fa-briefcase"><i class="fas fa-briefcase"></i></div>
+                        </div>
+                        <input type="hidden" id="collectionIcon" value="fa-folder">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="newsAggregator.closeCollectionEditor()">Cancel</button>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i> Save Collection
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Collection View Modal -->
+    <div class="collection-view-modal" id="collectionViewModal" style="display: none;" role="dialog" aria-labelledby="collectionViewTitle" aria-modal="true">
+        <div class="modal-overlay" onclick="newsAggregator.closeCollectionView()"></div>
+        <div class="modal-content collection-view-content">
+            <div class="modal-header">
+                <div class="collection-header-info">
+                    <h3 id="collectionViewTitle"><i class="fas fa-folder" id="collectionViewIcon"></i> <span id="collectionViewName"></span></h3>
+                    <p class="collection-description" id="collectionViewDescription"></p>
+                </div>
+                <button onclick="newsAggregator.closeCollectionView()" class="close-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Export and actions toolbar -->
+                <div class="collection-toolbar">
+                    <div class="collection-stats">
+                        <span id="collectionArticleCount">0 articles</span>
+                    </div>
+                    <div class="collection-actions">
+                        <button class="btn-secondary" id="exportCollectionBtn">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Export format selector (hidden by default) -->
+                <div class="export-options" id="exportOptions" style="display: none;">
+                    <button class="export-format-btn" data-format="json">
+                        <i class="fas fa-file-code"></i> JSON
+                    </button>
+                    <button class="export-format-btn" data-format="markdown">
+                        <i class="fas fa-file-alt"></i> Markdown
+                    </button>
+                    <button class="export-format-btn" data-format="csv">
+                        <i class="fas fa-file-excel"></i> CSV
+                    </button>
+                    <button class="export-format-btn" data-format="html">
+                        <i class="fas fa-file-code"></i> HTML
+                    </button>
+                </div>
+
+                <!-- Articles in collection -->
+                <div class="collection-articles" id="collectionArticles">
+                    <!-- Articles will be rendered here -->
+                </div>
             </div>
         </div>
     </div>
@@ -429,6 +572,7 @@
 
     <script src="utils/sanitizer.js"></script>
     <script src="utils/deduplication.js"></script>
+    <script src="utils/collections.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

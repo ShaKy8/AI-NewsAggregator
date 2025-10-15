@@ -28,6 +28,11 @@ class NewsAggregator {
         });
         this.expandedDuplicates = new Set(); // Track which duplicate groups are expanded
 
+        // Collections manager
+        this.collectionManager = new CollectionManager();
+        this.currentViewingCollection = null; // Track which collection is currently being viewed
+        this.editingCollection = null; // Track which collection is being edited
+
         // AI Summary settings
         this.expandedAISummaries = new Set(); // Track which AI summaries are expanded
         this.generatingAISummaries = new Set(); // Track which summaries are being generated
@@ -64,6 +69,7 @@ class NewsAggregator {
         this.bindEventListeners();
         this.applyTheme();
         this.updateSavedCount();
+        this.updateCollectionsCount();
         this.setupAutoRefresh();
         this.updateSourcesCount();
         this.startRealTimeClock();
@@ -96,7 +102,26 @@ class NewsAggregator {
         if (aboutBtn) aboutBtn.addEventListener('click', () => this.showAboutModal());
         
         document.getElementById('savedArticlesBtn').addEventListener('click', () => this.showSavedArticles());
-        
+        document.getElementById('collectionsBtn').addEventListener('click', () => this.showCollectionsManager());
+
+        // Collections modal event listeners
+        document.getElementById('createCollectionBtn').addEventListener('click', () => this.openCollectionEditor());
+        document.getElementById('collectionEditForm').addEventListener('submit', (e) => this.saveCollection(e));
+        document.getElementById('exportCollectionBtn').addEventListener('click', () => this.toggleExportOptions());
+
+        // Color and icon picker event listeners
+        document.querySelectorAll('.color-option').forEach(option => {
+            option.addEventListener('click', (e) => this.selectColor(e.target.dataset.color));
+        });
+        document.querySelectorAll('.icon-option').forEach(option => {
+            option.addEventListener('click', (e) => this.selectIcon(e.target.closest('.icon-option').dataset.icon));
+        });
+
+        // Export format event listeners
+        document.querySelectorAll('.export-format-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => this.exportCollection(btn.dataset.format));
+        });
+
         // Mobile menu controls
         document.getElementById('mobileMenuToggle').addEventListener('click', () => this.showMobileMenu());
         document.getElementById('closeMobileMenu').addEventListener('click', () => this.closeMobileMenu());
@@ -1627,28 +1652,43 @@ class NewsAggregator {
     showSavedArticles() {
         const modal = document.getElementById('savedModal');
         const articlesList = document.getElementById('savedArticlesList');
-        
+
         if (this.savedArticles.length === 0) {
             articlesList.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">No saved articles yet</p>';
         } else {
-            articlesList.innerHTML = this.savedArticles.map(article => `
-                <div class="saved-article-item" onclick="window.open('${article.link}', '_blank')">
-                    <div class="saved-article-info">
-                        <h4>${this.escapeHtml(article.title)}</h4>
-                        <p>${this.escapeHtml(this.truncateText(article.summary || '', 100))}</p>
-                        <div class="saved-article-meta">
-                            <span><i class="fas fa-tag"></i> ${article.category}</span>
-                            <span><i class="fas fa-globe"></i> ${article.source}</span>
-                            <span><i class="fas fa-bookmark"></i> ${this.getTimeAgo(article.savedAt)}</span>
+            articlesList.innerHTML = this.savedArticles.map(article => {
+                const articleCollections = this.collectionManager.getCollectionsForArticle(article.id);
+                const collectionBadges = articleCollections.map(col =>
+                    `<span class="article-collection-badge" style="background: ${col.color};" title="${this.escapeHtml(col.name)}">
+                        <i class="fas ${col.icon}"></i> ${this.escapeHtml(col.name)}
+                    </span>`
+                ).join('');
+
+                return `
+                    <div class="saved-article-item" onclick="window.open('${article.url || article.link}', '_blank')">
+                        <div class="saved-article-info">
+                            <h4>${this.escapeHtml(article.title)}</h4>
+                            <p>${this.escapeHtml(this.truncateText(article.summary || '', 100))}</p>
+                            <div class="saved-article-meta">
+                                <span><i class="fas fa-tag"></i> ${article.category}</span>
+                                <span><i class="fas fa-globe"></i> ${article.source}</span>
+                                <span><i class="fas fa-bookmark"></i> ${this.getTimeAgo(article.savedAt)}</span>
+                            </div>
+                            ${collectionBadges ? `<div class="article-collections">${collectionBadges}</div>` : ''}
+                        </div>
+                        <div class="saved-article-actions">
+                            <button class="icon-btn add-to-collection" onclick="event.stopPropagation(); newsAggregator.showCollectionSelectorForArticle('${article.id}')" title="Add to collection">
+                                <i class="fas fa-folder-plus"></i>
+                            </button>
+                            <button class="remove-saved" onclick="event.stopPropagation(); newsAggregator.removeSavedArticle('${article.id}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
                     </div>
-                    <button class="remove-saved" onclick="event.stopPropagation(); newsAggregator.removeSavedArticle('${article.id}')">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
-        
+
         modal.style.display = 'flex';
     }
     
@@ -1993,6 +2033,368 @@ class NewsAggregator {
         } else if (direction === 'ArrowUp') {
             const prevIndex = currentIndex <= 0 ? articles.length - 1 : currentIndex - 1;
             articles[prevIndex].focus();
+        }
+    }
+
+    // ==================== COLLECTIONS MANAGEMENT ====================
+
+    updateCollectionsCount() {
+        const count = this.collectionManager.getAllCollections().length;
+        document.getElementById('collectionsCount').textContent = count;
+    }
+
+    showCollectionsManager() {
+        this.renderCollectionsList();
+        document.getElementById('collectionsModal').style.display = 'flex';
+    }
+
+    closeCollectionsManager() {
+        document.getElementById('collectionsModal').style.display = 'none';
+    }
+
+    renderCollectionsList() {
+        const collections = this.collectionManager.getAllCollections();
+        const container = document.getElementById('collectionsList');
+
+        if (collections.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-folder-open"></i>
+                    <p>No collections yet</p>
+                    <p class="empty-state-hint">Create your first collection to organize articles</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = collections.map(collection => {
+            const articleCount = collection.articleIds.length;
+            return `
+                <div class="collection-card" style="border-left-color: ${collection.color};">
+                    <div class="collection-card-header">
+                        <div class="collection-card-title">
+                            <i class="fas ${collection.icon}" style="color: ${collection.color};"></i>
+                            <h4>${this.escapeHtml(collection.name)}</h4>
+                        </div>
+                        <div class="collection-card-actions">
+                            <button class="icon-btn" onclick="newsAggregator.openCollectionEditor('${collection.id}')" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="icon-btn" onclick="newsAggregator.deleteCollectionConfirm('${collection.id}')" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="collection-card-description">${this.escapeHtml(collection.description || 'No description')}</p>
+                    <div class="collection-card-footer">
+                        <span class="collection-article-count">
+                            <i class="fas fa-file-alt"></i>
+                            ${articleCount} article${articleCount !== 1 ? 's' : ''}
+                        </span>
+                        <button class="btn-view-collection" onclick="newsAggregator.viewCollection('${collection.id}')">
+                            View <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    openCollectionEditor(collectionId = null) {
+        this.editingCollection = collectionId;
+        const modal = document.getElementById('collectionEditModal');
+        const form = document.getElementById('collectionEditForm');
+        const modeText = document.getElementById('collectionEditMode');
+
+        if (collectionId) {
+            // Edit mode
+            const collection = this.collectionManager.getCollection(collectionId);
+            if (!collection) return;
+
+            modeText.textContent = 'Edit';
+            document.getElementById('editingCollectionId').value = collectionId;
+            document.getElementById('collectionName').value = collection.name;
+            document.getElementById('collectionDescription').value = collection.description;
+            document.getElementById('collectionColor').value = collection.color;
+            document.getElementById('collectionIcon').value = collection.icon;
+
+            // Update UI selections
+            this.selectColor(collection.color);
+            this.selectIcon(collection.icon);
+        } else {
+            // Create mode
+            modeText.textContent = 'Create';
+            form.reset();
+            document.getElementById('editingCollectionId').value = '';
+            this.selectColor('#667eea');
+            this.selectIcon('fa-folder');
+        }
+
+        modal.style.display = 'flex';
+    }
+
+    closeCollectionEditor() {
+        document.getElementById('collectionEditModal').style.display = 'none';
+        this.editingCollection = null;
+    }
+
+    selectColor(color) {
+        document.getElementById('collectionColor').value = color;
+        document.querySelectorAll('.color-option').forEach(opt => {
+            opt.classList.toggle('selected', opt.dataset.color === color);
+        });
+    }
+
+    selectIcon(icon) {
+        document.getElementById('collectionIcon').value = icon;
+        document.querySelectorAll('.icon-option').forEach(opt => {
+            opt.classList.toggle('selected', opt.dataset.icon === icon);
+        });
+    }
+
+    saveCollection(event) {
+        event.preventDefault();
+
+        const name = document.getElementById('collectionName').value.trim();
+        const description = document.getElementById('collectionDescription').value.trim();
+        const color = document.getElementById('collectionColor').value;
+        const icon = document.getElementById('collectionIcon').value;
+        const editingId = document.getElementById('editingCollectionId').value;
+
+        if (!name) {
+            this.showNotification('Please enter a collection name', 'error');
+            return;
+        }
+
+        if (editingId) {
+            // Update existing collection
+            this.collectionManager.updateCollection(editingId, {
+                name,
+                description,
+                color,
+                icon
+            });
+            this.showNotification('Collection updated successfully');
+        } else {
+            // Create new collection
+            this.collectionManager.createCollection(name, description, color, icon);
+            this.showNotification('Collection created successfully');
+        }
+
+        this.closeCollectionEditor();
+        this.renderCollectionsList();
+        this.updateCollectionsCount();
+    }
+
+    deleteCollectionConfirm(collectionId) {
+        const collection = this.collectionManager.getCollection(collectionId);
+        if (!collection) return;
+
+        const articleCount = collection.articleIds.length;
+        const message = articleCount > 0
+            ? `Delete "${collection.name}"? This collection contains ${articleCount} article${articleCount !== 1 ? 's' : ''}. Articles will not be deleted, only removed from this collection.`
+            : `Delete "${collection.name}"?`;
+
+        if (confirm(message)) {
+            this.collectionManager.deleteCollection(collectionId);
+            this.showNotification('Collection deleted');
+            this.renderCollectionsList();
+            this.updateCollectionsCount();
+
+            // Remove collection references from saved articles
+            this.savedArticles = this.savedArticles.map(article => ({
+                ...article,
+                collections: (article.collections || []).filter(id => id !== collectionId)
+            }));
+            localStorage.setItem('savedArticles', JSON.stringify(this.savedArticles));
+        }
+    }
+
+    viewCollection(collectionId) {
+        const collection = this.collectionManager.getCollection(collectionId);
+        if (!collection) return;
+
+        this.currentViewingCollection = collectionId;
+
+        // Update header
+        document.getElementById('collectionViewName').textContent = collection.name;
+        document.getElementById('collectionViewDescription').textContent = collection.description || 'No description';
+        document.getElementById('collectionViewIcon').className = `fas ${collection.icon}`;
+        document.getElementById('collectionViewIcon').style.color = collection.color;
+
+        // Get articles in this collection
+        const articles = this.savedArticles.filter(a =>
+            collection.articleIds.includes(a.id)
+        );
+
+        // Update article count
+        document.getElementById('collectionArticleCount').textContent =
+            `${articles.length} article${articles.length !== 1 ? 's' : ''}`;
+
+        // Render articles
+        const container = document.getElementById('collectionArticles');
+        if (articles.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>No articles in this collection</p>
+                    <p class="empty-state-hint">Save articles and add them to this collection</p>
+                </div>
+            `;
+        } else {
+            container.innerHTML = articles.map(article => `
+                <div class="collection-article-item">
+                    <div class="collection-article-info">
+                        <h4>${this.escapeHtml(article.title)}</h4>
+                        <p>${this.escapeHtml(this.truncateText(article.summary || '', 100))}</p>
+                        <div class="collection-article-meta">
+                            <span><i class="fas fa-newspaper"></i> ${this.escapeHtml(article.source)}</span>
+                            <span><i class="fas fa-calendar"></i> ${new Date(article.savedAt).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                    <div class="collection-article-actions">
+                        <button class="icon-btn" onclick="window.open('${article.url || article.link}', '_blank')" title="Open article">
+                            <i class="fas fa-external-link-alt"></i>
+                        </button>
+                        <button class="icon-btn" onclick="newsAggregator.removeFromCollection('${collectionId}', '${article.id}')" title="Remove from collection">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Show modal
+        this.closeCollectionsManager();
+        document.getElementById('collectionViewModal').style.display = 'flex';
+    }
+
+    closeCollectionView() {
+        document.getElementById('collectionViewModal').style.display = 'none';
+        document.getElementById('exportOptions').style.display = 'none';
+        this.currentViewingCollection = null;
+    }
+
+    removeFromCollection(collectionId, articleId) {
+        this.collectionManager.removeArticleFromCollection(collectionId, articleId);
+
+        // Update saved article's collection list
+        const article = this.savedArticles.find(a => a.id === articleId);
+        if (article) {
+            article.collections = (article.collections || []).filter(id => id !== collectionId);
+            localStorage.setItem('savedArticles', JSON.stringify(this.savedArticles));
+        }
+
+        this.showNotification('Removed from collection');
+        this.viewCollection(collectionId); // Refresh view
+    }
+
+    toggleExportOptions() {
+        const exportOptions = document.getElementById('exportOptions');
+        exportOptions.style.display = exportOptions.style.display === 'none' ? 'flex' : 'none';
+    }
+
+    exportCollection(format) {
+        if (!this.currentViewingCollection) return;
+
+        const collectionId = this.currentViewingCollection;
+        const collection = this.collectionManager.getCollection(collectionId);
+        if (!collection) return;
+
+        let content, filename, mimeType;
+
+        switch (format) {
+            case 'json':
+                content = JSON.stringify(
+                    this.collectionManager.exportToJSON(collectionId, this.savedArticles),
+                    null,
+                    2
+                );
+                filename = `${collection.name.replace(/[^a-z0-9]/gi, '_')}.json`;
+                mimeType = 'application/json';
+                break;
+
+            case 'markdown':
+                content = this.collectionManager.exportToMarkdown(collectionId, this.savedArticles);
+                filename = `${collection.name.replace(/[^a-z0-9]/gi, '_')}.md`;
+                mimeType = 'text/markdown';
+                break;
+
+            case 'csv':
+                content = this.collectionManager.exportToCSV(collectionId, this.savedArticles);
+                filename = `${collection.name.replace(/[^a-z0-9]/gi, '_')}.csv`;
+                mimeType = 'text/csv';
+                break;
+
+            case 'html':
+                content = this.collectionManager.exportToHTML(collectionId, this.savedArticles);
+                filename = `${collection.name.replace(/[^a-z0-9]/gi, '_')}.html`;
+                mimeType = 'text/html';
+                break;
+
+            default:
+                this.showNotification('Unknown export format', 'error');
+                return;
+        }
+
+        // Create download
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        this.showNotification(`Exported as ${format.toUpperCase()}`);
+        this.toggleExportOptions();
+    }
+
+    showCollectionSelectorForArticle(articleId) {
+        const article = this.savedArticles.find(a => a.id === articleId);
+        if (!article) return;
+
+        const collections = this.collectionManager.getAllCollections();
+        const articleCollections = this.collectionManager.getCollectionsForArticle(articleId);
+        const articleCollectionIds = articleCollections.map(c => c.id);
+
+        const selectorHTML = `
+            <div class="collection-selector-overlay" onclick="this.remove()">
+                <div class="collection-selector-modal" onclick="event.stopPropagation()">
+                    <h4><i class="fas fa-folder-plus"></i> Add to Collections</h4>
+                    <p class="selector-article-title">${this.escapeHtml(this.truncateText(article.title, 60))}</p>
+                    <div class="collection-checkboxes">
+                        ${collections.map(col => `
+                            <label class="collection-checkbox-item">
+                                <input type="checkbox"
+                                       data-collection-id="${col.id}"
+                                       ${articleCollectionIds.includes(col.id) ? 'checked' : ''}
+                                       onchange="newsAggregator.toggleArticleCollection('${articleId}', '${col.id}', this.checked)">
+                                <span class="checkbox-custom"></span>
+                                <i class="fas ${col.icon}" style="color: ${col.color};"></i>
+                                <span>${this.escapeHtml(col.name)}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                    <button class="btn-primary" onclick="this.closest('.collection-selector-overlay').remove(); newsAggregator.showSavedArticles();">
+                        Done
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', selectorHTML);
+    }
+
+    toggleArticleCollection(articleId, collectionId, isChecked) {
+        if (isChecked) {
+            this.collectionManager.addArticleToCollection(collectionId, articleId);
+            this.showNotification('Added to collection');
+        } else {
+            this.collectionManager.removeArticleFromCollection(collectionId, articleId);
+            this.showNotification('Removed from collection');
         }
     }
 }
