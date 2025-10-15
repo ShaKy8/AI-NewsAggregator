@@ -5,7 +5,11 @@
     "url": "https://www.bleepingcomputer.com/",
     "category": "Cybersecurity",
     "status": "active",
-    "created": "2025-08-11T22:09:57.719Z"
+    "created": "2025-08-11T22:09:57.719Z",
+    "articleCount": 10,
+    "lastSuccess": "2025-10-15T20:00:01.543Z",
+    "lastError": null,
+    "lastAttempt": "2025-10-15T20:00:01.543Z"
   },
   {
     "id": "2",
@@ -21,7 +25,11 @@
     "url": "https://www.neowin.net/",
     "category": "Developer Tools",
     "status": "active",
-    "created": "2025-08-11T22:09:57.719Z"
+    "created": "2025-08-11T22:09:57.719Z",
+    "articleCount": 10,
+    "lastSuccess": "2025-10-15T20:00:04.300Z",
+    "lastError": null,
+    "lastAttempt": "2025-10-15T20:00:04.300Z"
   },
   {
     "id": "1754951073270",
@@ -29,7 +37,11 @@
     "url": "https://techcrunch.com/",
     "category": "Developer Tools",
     "status": "active",
-    "created": "2025-08-11T22:24:33.270Z"
+    "created": "2025-08-11T22:24:33.270Z",
+    "articleCount": 1,
+    "lastSuccess": "2025-10-15T20:00:04.433Z",
+    "lastError": null,
+    "lastAttempt": "2025-10-15T20:00:04.433Z"
   },
   {
     "id": "8",
@@ -37,7 +49,11 @@
     "url": "https://www.securityweek.com/",
     "category": "Cybersecurity",
     "status": "active",
-    "created": "2025-08-12T15:00:00.000Z"
+    "created": "2025-08-12T15:00:00.000Z",
+    "articleCount": 10,
+    "lastSuccess": "2025-10-15T20:00:05.595Z",
+    "lastError": null,
+    "lastAttempt": "2025-10-15T20:00:05.595Z"
   },
   {
     "id": "9",
@@ -45,7 +61,11 @@
     "url": "https://krebsonsecurity.com/",
     "category": "Cybersecurity",
     "status": "active",
-    "created": "2025-08-12T15:00:00.000Z"
+    "created": "2025-08-12T15:00:00.000Z",
+    "articleCount": 10,
+    "lastSuccess": "2025-10-15T20:00:06.585Z",
+    "lastError": null,
+    "lastAttempt": "2025-10-15T20:00:06.585Z"
   },
   {
     "id": "11",
@@ -53,7 +73,11 @@
     "url": "https://arstechnica.com/",
     "category": "Developer Tools",
     "status": "active",
-    "created": "2025-08-12T15:00:00.000Z"
+    "created": "2025-08-12T15:00:00.000Z",
+    "articleCount": 10,
+    "lastSuccess": "2025-10-15T20:00:07.717Z",
+    "lastError": null,
+    "lastAttempt": "2025-10-15T20:00:07.717Z"
   },
   {
     "id": "1755528834459",
@@ -61,7 +85,11 @@
     "url": "https://claudecode.io/blog",
     "category": "Developer Tools",
     "status": "active",
-    "created": "2025-08-18T14:53:54.471Z"
+    "created": "2025-08-18T14:53:54.471Z",
+    "articleCount": 10,
+    "lastSuccess": "2025-10-15T20:00:09.096Z",
+    "lastError": null,
+    "lastAttempt": "2025-10-15T20:00:09.096Z"
   },
   {
     "id": "1755638934462",
@@ -69,7 +97,11 @@
     "url": "https://vercel.com/blog",
     "category": "Web Development",
     "status": "active",
-    "created": "2025-10-15T18:30:00.000Z"
+    "created": "2025-10-15T18:30:00.000Z",
+    "articleCount": 10,
+    "lastSuccess": "2025-10-15T20:00:09.709Z",
+    "lastError": null,
+    "lastAttempt": "2025-10-15T20:00:09.709Z"
   },
   {
     "id": "1755638934466",
@@ -77,7 +109,11 @@
     "url": "https://web.dev/blog",
     "category": "Web Development",
     "status": "active",
-    "created": "2025-10-15T18:30:00.000Z"
+    "created": "2025-10-15T18:30:00.000Z",
+    "articleCount": 1,
+    "lastSuccess": "2025-10-15T20:00:10.618Z",
+    "lastError": null,
+    "lastAttempt": "2025-10-15T20:00:10.618Z"
   },
   {
     "id": "1755800000001",
@@ -93,7 +129,11 @@
     "url": "https://www.anthropic.com/news",
     "category": "AI & ML",
     "status": "active",
-    "created": "2025-10-15T20:00:00.000Z"
+    "created": "2025-10-15T20:00:00.000Z",
+    "articleCount": 1,
+    "lastSuccess": "2025-10-15T20:00:19.949Z",
+    "lastError": null,
+    "lastAttempt": "2025-10-15T20:00:19.949Z"
   },
   {
     "id": "1755800000003",
@@ -109,7 +149,11 @@
     "url": "https://blogs.microsoft.com/ai/",
     "category": "AI & ML",
     "status": "active",
-    "created": "2025-10-15T20:00:00.000Z"
+    "created": "2025-10-15T20:00:00.000Z",
+    "articleCount": 10,
+    "lastSuccess": "2025-10-15T20:00:22.331Z",
+    "lastError": null,
+    "lastAttempt": "2025-10-15T20:00:22.331Z"
   },
   {
     "id": "1755800000005",
@@ -133,7 +177,11 @@
     "url": "https://github.blog",
     "category": "Developer Tools",
     "status": "active",
-    "created": "2025-10-15T20:00:00.000Z"
+    "created": "2025-10-15T20:00:00.000Z",
+    "articleCount": 10,
+    "lastSuccess": "2025-10-15T20:00:24.969Z",
+    "lastError": null,
+    "lastAttempt": "2025-10-15T20:00:24.969Z"
   },
   {
     "id": "1755800000008",
@@ -141,7 +189,11 @@
     "url": "https://stackoverflow.blog",
     "category": "Developer Experience",
     "status": "active",
-    "created": "2025-10-15T20:00:00.000Z"
+    "created": "2025-10-15T20:00:00.000Z",
+    "articleCount": 6,
+    "lastSuccess": "2025-10-15T20:00:25.967Z",
+    "lastError": null,
+    "lastAttempt": "2025-10-15T20:00:25.967Z"
   },
   {
     "id": "1755800000009",
@@ -157,7 +209,11 @@
     "url": "https://blog.langchain.dev",
     "category": "AI & ML",
     "status": "active",
-    "created": "2025-10-15T20:00:00.000Z"
+    "created": "2025-10-15T20:00:00.000Z",
+    "articleCount": 10,
+    "lastSuccess": "2025-10-15T20:00:29.148Z",
+    "lastError": null,
+    "lastAttempt": "2025-10-15T20:00:29.148Z"
   },
   {
     "id": "1755800000011",
@@ -166,5 +222,45 @@
     "category": "AI & ML",
     "status": "active",
     "created": "2025-10-15T20:00:00.000Z"
+  },
+  {
+    "id": "1755800000012",
+    "name": "Tabnine Blog",
+    "url": "https://www.tabnine.com/blog",
+    "category": "AI Coding Tools",
+    "status": "active",
+    "created": "2025-10-15T20:05:00.000Z"
+  },
+  {
+    "id": "1755800000013",
+    "name": "Codeium Blog",
+    "url": "https://codeium.com/blog",
+    "category": "AI Coding Tools",
+    "status": "active",
+    "created": "2025-10-15T20:05:00.000Z"
+  },
+  {
+    "id": "1755800000014",
+    "name": "AWS Machine Learning Blog",
+    "url": "https://aws.amazon.com/blogs/machine-learning/",
+    "category": "AI Coding Tools",
+    "status": "active",
+    "created": "2025-10-15T20:05:00.000Z"
+  },
+  {
+    "id": "1755800000015",
+    "name": "JetBrains Blog",
+    "url": "https://blog.jetbrains.com/",
+    "category": "AI Coding Tools",
+    "status": "active",
+    "created": "2025-10-15T20:05:00.000Z"
+  },
+  {
+    "id": "1755800000016",
+    "name": "Sourcegraph Blog",
+    "url": "https://about.sourcegraph.com/blog",
+    "category": "AI Coding Tools",
+    "status": "active",
+    "created": "2025-10-15T20:05:00.000Z"
   }
 ]
