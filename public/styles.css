@@ -1477,6 +1477,15 @@ body.dark-theme .include-help {
     color: #764ba2;
 }
 
+#dynamicSources {
+    font-size: 11px;
+    color: #666;
+}
+
+body.dark-mode #dynamicSources {
+    color: #999;
+}
+
 /* Ultra Attribution Styles */
 .ultra-attribution {
     position: relative;
