@@ -5,11 +5,7 @@
     "url": "https://www.bleepingcomputer.com/",
     "category": "Cybersecurity",
     "status": "active",
-    "articleCount": 10,
-    "lastSuccess": "2025-10-15T18:00:00.814Z",
-    "created": "2025-08-11T22:09:57.719Z",
-    "lastError": null,
-    "lastAttempt": "2025-10-15T18:00:00.814Z"
+    "created": "2025-08-11T22:09:57.719Z"
   },
   {
     "id": "2",
@@ -17,69 +13,23 @@
     "url": "https://cybersecuritynews.com/",
     "category": "Cybersecurity",
     "status": "active",
-    "articleCount": 6,
-    "lastSuccess": "2025-08-15T14:46:03.174Z",
     "created": "2025-08-11T22:09:57.719Z"
   },
   {
     "id": "3",
     "name": "Neowin",
     "url": "https://www.neowin.net/",
-    "category": "Coding Tools",
+    "category": "Developer Tools",
     "status": "active",
-    "articleCount": 10,
-    "lastSuccess": "2025-08-15T14:46:25.076Z",
-    "created": "2025-08-11T22:09:57.719Z",
-    "lastError": null,
-    "lastAttempt": "2025-08-15T14:46:25.076Z",
-    "updated": "2025-10-15T18:30:00.000Z"
-  },
-  {
-    "id": "4",
-    "name": "AskWoody",
-    "url": "https://www.askwoody.com/",
-    "category": "Coding Tools",
-    "status": "active",
-    "articleCount": 0,
-    "lastSuccess": null,
-    "created": "2025-08-11T22:09:57.719Z",
-    "updated": "2025-08-15T14:46:41.405Z"
+    "created": "2025-08-11T22:09:57.719Z"
   },
   {
     "id": "1754951073270",
     "name": "TechCrunch",
     "url": "https://techcrunch.com/",
-    "category": "Coding Tools",
+    "category": "Developer Tools",
     "status": "active",
-    "created": "2025-08-11T22:24:33.270Z",
-    "articleCount": 1,
-    "lastSuccess": "2025-10-15T18:09:43.788Z",
-    "lastError": null,
-    "lastAttempt": "2025-10-15T18:09:43.788Z"
-  },
-  {
-    "id": "6",
-    "name": "The Hacker News",
-    "url": "https://thehackernews.com/",
-    "category": "Cybersecurity",
-    "status": "active",
-    "created": "2025-08-12T15:00:00.000Z",
-    "articleCount": 0,
-    "lastSuccess": null,
-    "lastError": null,
-    "lastAttempt": null
-  },
-  {
-    "id": "7",
-    "name": "Dark Reading",
-    "url": "https://www.darkreading.com/",
-    "category": "Cybersecurity",
-    "status": "active",
-    "created": "2025-08-12T15:00:00.000Z",
-    "articleCount": 0,
-    "lastSuccess": null,
-    "lastError": null,
-    "lastAttempt": null
+    "created": "2025-08-11T22:24:33.270Z"
   },
   {
     "id": "8",
@@ -87,11 +37,7 @@
     "url": "https://www.securityweek.com/",
     "category": "Cybersecurity",
     "status": "active",
-    "created": "2025-08-12T15:00:00.000Z",
-    "articleCount": 10,
-    "lastSuccess": "2025-10-15T18:09:52.994Z",
-    "lastError": null,
-    "lastAttempt": "2025-10-15T18:09:52.994Z"
+    "created": "2025-08-12T15:00:00.000Z"
   },
   {
     "id": "9",
@@ -99,59 +45,15 @@
     "url": "https://krebsonsecurity.com/",
     "category": "Cybersecurity",
     "status": "active",
-    "created": "2025-08-12T15:00:00.000Z",
-    "articleCount": 10,
-    "lastSuccess": "2025-10-15T18:09:54.705Z",
-    "lastError": null,
-    "lastAttempt": "2025-10-15T18:09:54.705Z"
-  },
-  {
-    "id": "10",
-    "name": "The Verge",
-    "url": "https://www.theverge.com/",
-    "category": "Coding Tools",
-    "status": "active",
-    "created": "2025-08-12T15:00:00.000Z",
-    "articleCount": 0,
-    "lastSuccess": null,
-    "lastError": null,
-    "lastAttempt": null
+    "created": "2025-08-12T15:00:00.000Z"
   },
   {
     "id": "11",
     "name": "Ars Technica",
     "url": "https://arstechnica.com/",
-    "category": "Coding Tools",
+    "category": "Developer Tools",
     "status": "active",
-    "articleCount": 10,
-    "lastSuccess": "2025-08-15T21:54:29.133Z",
-    "lastError": null,
-    "lastAttempt": "2025-08-15T21:54:29.133Z",
-    "updated": "2025-10-15T18:30:00.000Z"
-  },
-  {
-    "id": "12",
-    "name": "Wired",
-    "url": "https://www.wired.com/",
-    "category": "Coding Tools",
-    "status": "active",
-    "articleCount": 0,
-    "lastSuccess": null,
-    "lastError": null,
-    "lastAttempt": null,
-    "updated": "2025-10-15T18:30:00.000Z"
-  },
-  {
-    "id": "13",
-    "name": "Engadget",
-    "url": "https://www.engadget.com/",
-    "category": "Coding Tools",
-    "status": "active",
-    "created": "2025-08-12T15:00:00.000Z",
-    "articleCount": 0,
-    "lastSuccess": null,
-    "lastError": null,
-    "lastAttempt": null
+    "created": "2025-08-12T15:00:00.000Z"
   },
   {
     "id": "1755528834459",
@@ -159,36 +61,7 @@
     "url": "https://claudecode.io/blog",
     "category": "Developer Tools",
     "status": "active",
-    "selectors": null,
-    "articleCount": 10,
-    "lastSuccess": "2025-10-15T18:09:57.431Z",
-    "created": "2025-08-18T14:53:54.471Z",
-    "lastError": null,
-    "lastAttempt": "2025-10-15T18:09:57.431Z"
-  },
-  {
-    "id": "1755638934460",
-    "name": "Hacker News",
-    "url": "https://news.ycombinator.com/",
-    "category": "Developer Experience",
-    "status": "active",
-    "created": "2025-10-15T18:30:00.000Z",
-    "articleCount": 0,
-    "lastSuccess": null,
-    "lastError": null,
-    "lastAttempt": null
-  },
-  {
-    "id": "1755638934461",
-    "name": "Dev.to",
-    "url": "https://dev.to/",
-    "category": "Developer Experience",
-    "status": "active",
-    "created": "2025-10-15T18:30:00.000Z",
-    "articleCount": 0,
-    "lastSuccess": null,
-    "lastError": null,
-    "lastAttempt": null
+    "created": "2025-08-18T14:53:54.471Z"
   },
   {
     "id": "1755638934462",
@@ -196,47 +69,7 @@
     "url": "https://vercel.com/blog",
     "category": "Web Development",
     "status": "active",
-    "created": "2025-10-15T18:30:00.000Z",
-    "articleCount": 0,
-    "lastSuccess": null,
-    "lastError": null,
-    "lastAttempt": null
-  },
-  {
-    "id": "1755638934463",
-    "name": "The New Stack",
-    "url": "https://thenewstack.io/",
-    "category": "Cloud & DevOps",
-    "status": "active",
-    "created": "2025-10-15T18:30:00.000Z",
-    "articleCount": 0,
-    "lastSuccess": null,
-    "lastError": null,
-    "lastAttempt": null
-  },
-  {
-    "id": "1755638934464",
-    "name": "Warp Blog",
-    "url": "https://www.warp.dev/blog",
-    "category": "Developer Tools",
-    "status": "active",
-    "created": "2025-10-15T18:30:00.000Z",
-    "articleCount": 0,
-    "lastSuccess": null,
-    "lastError": null,
-    "lastAttempt": null
-  },
-  {
-    "id": "1755638934465",
-    "name": "Replit Blog",
-    "url": "https://blog.replit.com/",
-    "category": "Developer Tools",
-    "status": "active",
-    "created": "2025-10-15T18:30:00.000Z",
-    "articleCount": 0,
-    "lastSuccess": null,
-    "lastError": null,
-    "lastAttempt": null
+    "created": "2025-10-15T18:30:00.000Z"
   },
   {
     "id": "1755638934466",
@@ -244,46 +77,94 @@
     "url": "https://web.dev/blog",
     "category": "Web Development",
     "status": "active",
-    "created": "2025-10-15T18:30:00.000Z",
-    "articleCount": 0,
-    "lastSuccess": null,
-    "lastError": null,
-    "lastAttempt": null
+    "created": "2025-10-15T18:30:00.000Z"
   },
   {
-    "id": "1755638934467",
-    "name": "Supabase Blog",
-    "url": "https://supabase.com/blog",
+    "id": "1755800000001",
+    "name": "OpenAI Blog",
+    "url": "https://openai.com/blog",
+    "category": "AI & ML",
+    "status": "active",
+    "created": "2025-10-15T20:00:00.000Z"
+  },
+  {
+    "id": "1755800000002",
+    "name": "Anthropic Blog",
+    "url": "https://www.anthropic.com/news",
+    "category": "AI & ML",
+    "status": "active",
+    "created": "2025-10-15T20:00:00.000Z"
+  },
+  {
+    "id": "1755800000003",
+    "name": "Google AI Blog",
+    "url": "https://ai.googleblog.com",
+    "category": "AI & ML",
+    "status": "active",
+    "created": "2025-10-15T20:00:00.000Z"
+  },
+  {
+    "id": "1755800000004",
+    "name": "Microsoft AI Blog",
+    "url": "https://blogs.microsoft.com/ai/",
+    "category": "AI & ML",
+    "status": "active",
+    "created": "2025-10-15T20:00:00.000Z"
+  },
+  {
+    "id": "1755800000005",
+    "name": "Hugging Face Blog",
+    "url": "https://huggingface.co/blog",
+    "category": "AI & ML",
+    "status": "active",
+    "created": "2025-10-15T20:00:00.000Z"
+  },
+  {
+    "id": "1755800000006",
+    "name": "DeepMind Blog",
+    "url": "https://deepmind.google/discover/blog/",
+    "category": "AI & ML",
+    "status": "active",
+    "created": "2025-10-15T20:00:00.000Z"
+  },
+  {
+    "id": "1755800000007",
+    "name": "GitHub Blog",
+    "url": "https://github.blog",
     "category": "Developer Tools",
     "status": "active",
-    "created": "2025-10-15T18:30:00.000Z",
-    "articleCount": 0,
-    "lastSuccess": null,
-    "lastError": null,
-    "lastAttempt": null
+    "created": "2025-10-15T20:00:00.000Z"
   },
   {
-    "id": "1755638934468",
-    "name": "Railway Blog",
-    "url": "https://blog.railway.app/",
-    "category": "Cloud & DevOps",
+    "id": "1755800000008",
+    "name": "Stack Overflow Blog",
+    "url": "https://stackoverflow.blog",
+    "category": "Developer Experience",
     "status": "active",
-    "created": "2025-10-15T18:30:00.000Z",
-    "articleCount": 0,
-    "lastSuccess": null,
-    "lastError": null,
-    "lastAttempt": null
+    "created": "2025-10-15T20:00:00.000Z"
   },
   {
-    "id": "1755638934469",
-    "name": "Deno Blog",
-    "url": "https://deno.com/blog",
+    "id": "1755800000009",
+    "name": "Cursor Blog",
+    "url": "https://cursor.sh/blog",
     "category": "Developer Tools",
     "status": "active",
-    "created": "2025-10-15T18:30:00.000Z",
-    "articleCount": 0,
-    "lastSuccess": null,
-    "lastError": null,
-    "lastAttempt": null
+    "created": "2025-10-15T20:00:00.000Z"
+  },
+  {
+    "id": "1755800000010",
+    "name": "LangChain Blog",
+    "url": "https://blog.langchain.dev",
+    "category": "AI & ML",
+    "status": "active",
+    "created": "2025-10-15T20:00:00.000Z"
+  },
+  {
+    "id": "1755800000011",
+    "name": "Replicate Blog",
+    "url": "https://replicate.com/blog",
+    "category": "AI & ML",
+    "status": "active",
+    "created": "2025-10-15T20:00:00.000Z"
   }
 ]
