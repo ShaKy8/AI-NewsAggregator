@@ -3,9 +3,9 @@
  * Provides offline functionality and caching
  */
 
-const CACHE_NAME = 'ai-news-hub-v2';
-const STATIC_CACHE = 'ai-news-static-v2';
-const DYNAMIC_CACHE = 'ai-news-dynamic-v2';
+const CACHE_NAME = 'ai-news-hub-v3';
+const STATIC_CACHE = 'ai-news-static-v3';
+const DYNAMIC_CACHE = 'ai-news-dynamic-v3';
 
 // Assets to cache on install
 const STATIC_ASSETS = [
