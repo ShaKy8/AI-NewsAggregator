@@ -334,8 +334,11 @@ class NewsAggregator {
                 
                 <!-- 2. Article Title (Primary CTA) -->
                 <h3 class="news-title" id="title-${article.id}">
-                    <a href="javascript:void(0)" 
-                       onclick="newsAggregator.showArticlePreview('${article.id}')"
+                    <a href="${article.url || article.link}"
+                       class="article-title-link"
+                       data-article-id="${article.id}"
+                       target="_blank"
+                       rel="noopener noreferrer"
                        aria-describedby="summary-${article.id} meta-${article.id}">
                         ${this.escapeHtml(article.title)}
                     </a>
@@ -870,7 +873,8 @@ class NewsAggregator {
         // Then apply deduplication with error handling
         if (this.deduplicationEnabled) {
             try {
-                console.log('Starting deduplication on', this.articles.length, 'articles...');
+                const originalCount = this.articles.length;
+                console.log('Starting deduplication on', originalCount, 'articles...');
                 const startTime = performance.now();
 
                 this.articles = this.deduplicator.deduplicateArticles(this.articles);
@@ -879,7 +883,6 @@ class NewsAggregator {
                 console.log('Deduplication completed in', (endTime - startTime).toFixed(2), 'ms');
 
                 // Log deduplication stats
-                const originalCount = this.articles.reduce((sum, a) => sum + 1 + (a.duplicateCount || 0), 0);
                 const stats = this.deduplicator.getDeduplicationStats(originalCount, this.articles);
                 console.log('Deduplication stats:', stats);
             } catch (error) {
@@ -1603,6 +1606,16 @@ class NewsAggregator {
             });
         });
 
+        // Article title link click handlers - mark as read when clicked
+        document.querySelectorAll('.article-title-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                const articleId = link.dataset.articleId;
+                if (articleId) {
+                    this.markAsRead(articleId);
+                }
+            });
+        });
+
         // Close share menus when clicking outside
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.share-buttons') && !e.target.closest('.share-btn.action-btn')) {
@@ -1928,7 +1941,7 @@ class NewsAggregator {
 
         document.getElementById('previewReadBtn').onclick = () => {
             this.markAsRead(articleId);
-            window.open(article.link, '_blank', 'noopener,noreferrer');
+            window.open(article.url || article.link, '_blank', 'noopener,noreferrer');
             this.closeArticlePreview();
         };
 
