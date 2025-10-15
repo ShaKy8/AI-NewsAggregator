@@ -33,6 +33,9 @@ class NewsAggregator {
         this.currentViewingCollection = null; // Track which collection is currently being viewed
         this.editingCollection = null; // Track which collection is being edited
 
+        // Semantic search engine
+        this.semanticSearch = new SemanticSearchEngine();
+
         // AI Summary settings
         this.expandedAISummaries = new Set(); // Track which AI summaries are expanded
         this.generatingAISummaries = new Set(); // Track which summaries are being generated
@@ -151,7 +154,18 @@ class NewsAggregator {
             }, 200);
         });
         clearSearch.addEventListener('click', () => this.clearSearch());
-        
+
+        // Semantic search toggle
+        const semanticToggle = document.getElementById('semanticToggle');
+        if (semanticToggle) {
+            // Set initial state
+            if (this.semanticSearch.isEnabled()) {
+                semanticToggle.classList.add('active');
+            }
+
+            semanticToggle.addEventListener('click', () => this.toggleSemanticSearch());
+        }
+
         // Add search preset functionality
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('search-preset')) {
@@ -380,6 +394,13 @@ class NewsAggregator {
                         <i class="fas fa-clock" aria-hidden="true"></i>
                         ${timeAgo} • ${readingTime} min read
                     </span>
+                    <button class="similar-articles-btn"
+                            data-article-id="${article.id}"
+                            title="Find similar articles"
+                            aria-label="Find articles similar to this one">
+                        <i class="fas fa-project-diagram" aria-hidden="true"></i>
+                        Find Similar
+                    </button>
                 </div>
 
                 <!-- 5. AI Summary Section -->
@@ -931,23 +952,37 @@ class NewsAggregator {
         return btoa(encodeURIComponent(uniqueString)).replace(/[^a-zA-Z0-9]/g, '').substring(0, 16);
     }
     
-    applyCurrentFilters() {
+    async applyCurrentFilters() {
         let filtered = [...this.articles];
         let excluded = [];
-        
+
         if (this.currentFilter !== 'all') {
             filtered = filtered.filter(article => article.category === this.currentFilter);
         }
-        
+
         if (this.currentAgeFilter !== 'all') {
             filtered = filtered.filter(article => this.isArticleInAgeRange(article, this.currentAgeFilter));
         }
-        
+
         if (this.searchQuery) {
-            const searchTerms = this.parseSmartSearch(this.searchQuery);
-            filtered = filtered.filter(article => this.matchesSmartSearch(article, searchTerms));
+            if (this.semanticSearch.isEnabled()) {
+                // Use semantic search
+                const results = await this.semanticSearch.searchArticles(this.searchQuery, filtered);
+                // Filter out articles with very low relevance (score < 20)
+                filtered = results
+                    .filter(result => result.score >= 20)
+                    .map(result => ({
+                        ...result.article,
+                        _semanticScore: result.score,
+                        _semanticMatches: result.matches
+                    }));
+            } else {
+                // Use traditional keyword search
+                const searchTerms = this.parseSmartSearch(this.searchQuery);
+                filtered = filtered.filter(article => this.matchesSmartSearch(article, searchTerms));
+            }
         }
-        
+
         this.filteredArticles = filtered;
     }
     
@@ -1228,23 +1263,43 @@ class NewsAggregator {
         this.announceToScreenReader(`Cleared all ${count} include filters`);
     }
     
-    handleSearch(query) {
+    toggleSemanticSearch() {
+        const isEnabled = !this.semanticSearch.isEnabled();
+        this.semanticSearch.setEnabled(isEnabled);
+
+        const toggleBtn = document.getElementById('semanticToggle');
+        if (toggleBtn) {
+            toggleBtn.classList.toggle('active', isEnabled);
+        }
+
+        // Re-apply search if there's an active query
+        if (this.searchQuery) {
+            this.applyCurrentFilters();
+            this.renderNews();
+        }
+
+        const mode = isEnabled ? 'Semantic (AI-powered)' : 'Keyword';
+        this.showNotification(`Search mode: ${mode}`);
+        this.announceToScreenReader(`Switched to ${mode} search mode`);
+    }
+
+    async handleSearch(query) {
         this.searchQuery = window.Sanitizer ? window.Sanitizer.sanitizeSearchInput(query) : this.fallbackSanitizeSearchInput(query);
         const clearBtn = document.getElementById('clearSearch');
         const helpDiv = document.getElementById('searchHelp');
-        
+
         clearBtn.style.display = query ? 'block' : 'none';
-        
+
         // Show/hide search help based on focus and query
         if (query && this.isSearchFocused && !this.parseSmartSearch(query).hasOperators && helpDiv) {
             helpDiv.style.display = 'block';
         }
-        
-        this.applyCurrentFilters();
+
+        await this.applyCurrentFilters();
         this.renderNews();
         this.updateStats();
         this.updateFilterCounts();
-        
+
         // Announce search results to screen readers
         if (query) {
             setTimeout(() => {
@@ -1641,6 +1696,18 @@ class NewsAggregator {
             });
         });
 
+        // Find Similar Articles button click handlers
+        document.querySelectorAll('.similar-articles-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const articleId = btn.dataset.articleId;
+                if (articleId) {
+                    this.showSimilarArticles(articleId);
+                }
+            });
+        });
+
         // Close share menus when clicking outside
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.share-buttons') && !e.target.closest('.share-btn.action-btn')) {
@@ -1703,7 +1770,114 @@ class NewsAggregator {
         this.showSavedArticles();
         this.renderNews();
     }
-    
+
+    showSimilarArticles(articleId) {
+        // Find the target article
+        const targetArticle = this.articles.find(a => a.id === articleId);
+        if (!targetArticle) {
+            this.showNotification('Article not found', 'error');
+            return;
+        }
+
+        // Find similar articles using semantic search
+        const similarArticles = this.semanticSearch.findSimilarArticles(
+            targetArticle,
+            this.articles.filter(a => a.id !== articleId),
+            8 // Get top 8 similar articles
+        );
+
+        // Filter to only show articles with a meaningful similarity score
+        const relevantSimilar = similarArticles.filter(result => result.score >= 30);
+
+        // Create modal HTML
+        const modalHTML = `
+            <div class="similar-articles-overlay" onclick="this.remove()">
+                <div class="similar-articles-modal" onclick="event.stopPropagation()">
+                    <div class="similar-articles-header">
+                        <h3><i class="fas fa-project-diagram"></i> Similar Articles</h3>
+                        <button class="close-modal-btn" onclick="this.closest('.similar-articles-overlay').remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <div class="similar-articles-reference">
+                        <div class="reference-label">Finding articles similar to:</div>
+                        <div class="reference-article">
+                            <strong>${this.escapeHtml(this.truncateText(targetArticle.title, 80))}</strong>
+                            <div class="reference-meta">
+                                <span>${targetArticle.source}</span>
+                                <span>•</span>
+                                <span>${targetArticle.category}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="similar-articles-list">
+                        ${relevantSimilar.length === 0 ? `
+                            <div class="no-similar-articles">
+                                <i class="fas fa-search"></i>
+                                <p>No similar articles found</p>
+                                <small>Try enabling semantic search for better results</small>
+                            </div>
+                        ` : relevantSimilar.map((result, index) => {
+                            const article = result.article;
+                            const isSaved = this.savedArticles.some(saved => saved.id === article.id);
+                            const isRead = this.readArticles.includes(article.id);
+
+                            return `
+                                <div class="similar-article-item ${isRead ? 'read' : ''}"
+                                     data-article-id="${article.id}">
+                                    <div class="similar-article-number">${index + 1}</div>
+                                    <div class="similar-article-content">
+                                        <div class="similar-article-header">
+                                            <a href="${article.url || article.link}"
+                                               target="_blank"
+                                               rel="noopener noreferrer"
+                                               onclick="newsAggregator.markAsRead('${article.id}')"
+                                               class="similar-article-title">
+                                                ${this.escapeHtml(article.title)}
+                                            </a>
+                                            <div class="similar-article-badges">
+                                                <span class="similarity-score" title="Similarity: ${result.score}%">
+                                                    ${result.score}% match
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="similar-article-meta">
+                                            <span><i class="fas fa-globe"></i> ${article.source}</span>
+                                            <span><i class="fas fa-tag"></i> ${article.category}</span>
+                                            <span><i class="fas fa-clock"></i> ${this.getTimeAgo(article.scraped)}</span>
+                                        </div>
+                                        <div class="similar-article-summary">
+                                            ${this.escapeHtml(this.truncateText(article.summary || '', 120))}
+                                        </div>
+                                    </div>
+                                    <button class="similar-article-save ${isSaved ? 'saved' : ''}"
+                                            onclick="event.stopPropagation(); newsAggregator.saveArticle('${article.id}'); this.classList.toggle('saved');"
+                                            title="${isSaved ? 'Remove from saved' : 'Save article'}">
+                                        <i class="${isSaved ? 'fas' : 'far'} fa-bookmark"></i>
+                                    </button>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+
+                    ${relevantSimilar.length > 0 ? `
+                        <div class="similar-articles-footer">
+                            <small>Powered by semantic search • ${relevantSimilar.length} relevant results</small>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+
+        // Add modal to page
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+        // Announce to screen readers
+        this.announceToScreenReader(`Found ${relevantSimilar.length} similar articles`);
+    }
+
     generateTrendingTopics() {
         const wordFreq = {};
         

@@ -33,6 +33,10 @@
                     <div class="search-container" role="search">
                         <i class="fas fa-search"></i>
                         <input type="text" id="searchInput" placeholder="Try: +AI -ChatGPT &quot;machine learning&quot; category:industry" class="search-input" aria-label="Smart search with operators">
+                        <button id="semanticToggle" class="semantic-toggle" title="Toggle Semantic Search" aria-label="Toggle semantic search mode">
+                            <i class="fas fa-brain"></i>
+                            <span class="semantic-label">AI</span>
+                        </button>
                         <button id="clearSearch" class="clear-search" style="display: none;" aria-label="Clear search">
                             <i class="fas fa-times"></i>
                         </button>
@@ -573,6 +577,7 @@
     <script src="utils/sanitizer.js"></script>
     <script src="utils/deduplication.js"></script>
     <script src="utils/collections.js"></script>
+    <script src="utils/semantic-search.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
