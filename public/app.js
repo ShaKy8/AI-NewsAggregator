@@ -2431,51 +2431,6 @@ class NewsAggregator {
                 }
             });
         }
-
-        // Top sources (horizontal bar chart)
-        const sourceData = this.analytics.getSourceDistribution().slice(0, 10);
-        const sourcesCtx = document.getElementById('sourcesChart');
-        if (sourcesCtx && sourceData.length > 0) {
-            this.analyticsCharts.sources = new Chart(sourcesCtx, {
-                type: 'bar',
-                data: {
-                    labels: sourceData.map(s => s.name),
-                    datasets: [{
-                        label: 'Articles Read',
-                        data: sourceData.map(s => s.count),
-                        backgroundColor: '#667eea'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    indexAxis: 'y',
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1,
-                                font: {
-                                    size: 11
-                                }
-                            }
-                        },
-                        y: {
-                            ticks: {
-                                font: {
-                                    size: 11
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
     }
 
     exportAnalytics(format) {
