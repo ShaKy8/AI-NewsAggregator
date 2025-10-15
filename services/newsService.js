@@ -2,9 +2,39 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const fs = require('fs').promises;
 const path = require('path');
+const { validateArticle, sanitizeUrl } = require('../utils/sanitizer');
 
-const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36';
+// Rotate user agents to avoid detection
+const USER_AGENTS = [
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/121.0',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0'
+];
+
 const SOURCES_FILE = path.join(__dirname, '../sources.json');
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 2000; // 2 seconds
+const RATE_LIMIT_DELAY = 1000; // 1 second between requests
+
+// Track request timing for rate limiting
+let lastRequestTime = 0;
+
+// Category mapping from old to new AI-focused categories
+function mapCategory(oldCategory) {
+  const categoryMap = {
+    'Cybersecurity': 'AI News',
+    'Technology': 'Coding Tools',
+    'AI Industry': 'AI Industry',
+    'AI News': 'AI News',
+    'AI Research': 'AI Research',
+    'Coding Tools': 'Coding Tools',
+    'AI Tools': 'AI Tools'
+  };
+  return categoryMap[oldCategory] || oldCategory;
+}
 
 // Load sources dynamically from sources.json
 async function loadDynamicSources() {
@@ -18,7 +48,7 @@ async function loadDynamicSources() {
       .map(source => ({
         name: source.name,
         url: source.url,
-        category: source.category,
+        category: mapCategory(source.category),
         scraper: getScraperForSource(source),
         source: source // Keep original source data
       }));
@@ -55,45 +85,109 @@ function getDefaultSources() {
       name: 'BleepingComputer',
       url: 'https://www.bleepingcomputer.com/',
       scraper: scrapeBleepingComputer,
-      category: 'Cybersecurity'
+      category: mapCategory('Cybersecurity')
     },
     {
       name: 'Cybersecurity News',
       url: 'https://cybersecuritynews.com/',
       scraper: scrapeCybersecurityNews,
-      category: 'Cybersecurity'
+      category: mapCategory('Cybersecurity')
     },
     {
       name: 'Neowin',
       url: 'https://www.neowin.net/',
       scraper: scrapeNeowin,
-      category: 'Technology'
+      category: mapCategory('Technology')
     },
     {
       name: 'AskWoody',
       url: 'https://www.askwoody.com/',
       scraper: scrapeAskWoody,
-      category: 'Technology'
+      category: mapCategory('Technology')
     }
   ];
 }
 
-async function fetchPage(url) {
+// Get random user agent
+function getRandomUserAgent() {
+  return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
+}
+
+// Sleep function for delays
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Enhanced fetch with retry logic and better headers
+async function fetchPage(url, retryCount = 0) {
   try {
+    // Rate limiting - ensure minimum delay between requests
+    const now = Date.now();
+    const timeSinceLastRequest = now - lastRequestTime;
+    if (timeSinceLastRequest < RATE_LIMIT_DELAY) {
+      await sleep(RATE_LIMIT_DELAY - timeSinceLastRequest);
+    }
+    lastRequestTime = Date.now();
+
+    const userAgent = getRandomUserAgent();
     const response = await axios.get(url, {
       headers: {
-        'User-Agent': USER_AGENT,
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
+        'User-Agent': userAgent,
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+        'Accept-Language': 'en-US,en;q=0.9',
         'Accept-Encoding': 'gzip, deflate, br',
-        'DNT': '1',
-        'Connection': 'keep-alive',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+        'Sec-Ch-Ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+        'Sec-Ch-Ua-Mobile': '?0',
+        'Sec-Ch-Ua-Platform': '"Windows"',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+        'Sec-Fetch-User': '?1',
         'Upgrade-Insecure-Requests': '1',
+        'DNT': '1'
       },
-      timeout: 10000
+      timeout: 15000,
+      maxRedirects: 5,
+      validateStatus: function (status) {
+        return status < 500; // Resolve only if the status code is less than 500
+      }
     });
+    
+    // Handle different response codes
+    if (response.status === 429) {
+      if (retryCount < MAX_RETRIES) {
+        console.log(`Rate limited for ${url}, waiting before retry ${retryCount + 1}/${MAX_RETRIES}`);
+        await sleep(RETRY_DELAY * (retryCount + 1)); // Exponential backoff
+        return fetchPage(url, retryCount + 1);
+      } else {
+        throw new Error(`Rate limited after ${MAX_RETRIES} retries`);
+      }
+    }
+    
+    if (response.status === 403) {
+      if (retryCount < MAX_RETRIES) {
+        console.log(`Access forbidden for ${url}, trying different user agent ${retryCount + 1}/${MAX_RETRIES}`);
+        await sleep(RETRY_DELAY);
+        return fetchPage(url, retryCount + 1);
+      } else {
+        throw new Error(`Access forbidden after ${MAX_RETRIES} retries`);
+      }
+    }
+    
+    if (response.status >= 400) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
     return response.data;
   } catch (error) {
+    if (retryCount < MAX_RETRIES && (error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT' || error.message.includes('socket hang up'))) {
+      console.log(`Network error for ${url}, retrying ${retryCount + 1}/${MAX_RETRIES}: ${error.message}`);
+      await sleep(RETRY_DELAY * (retryCount + 1));
+      return fetchPage(url, retryCount + 1);
+    }
+    
     console.error(`Error fetching ${url}:`, error.message);
     return null;
   }
@@ -122,7 +216,7 @@ async function scrapeBleepingComputer() {
         link: link.startsWith('http') ? link : `https://www.bleepingcomputer.com${link}`,
         summary: summary || 'No summary available',
         source: 'BleepingComputer',
-        category: 'Cybersecurity',
+        category: mapCategory('Cybersecurity'),
         publishedAt,
         scraped: new Date().toISOString()
       });
@@ -154,7 +248,7 @@ async function scrapeCybersecurityNews() {
         link,
         summary: summary || 'No summary available',
         source: 'Cybersecurity News',
-        category: 'Cybersecurity',
+        category: mapCategory('Cybersecurity'),
         publishedAt,
         scraped: new Date().toISOString()
       });
@@ -186,7 +280,7 @@ async function scrapeNeowin() {
         link: link.startsWith('http') ? link : `https://www.neowin.net${link}`,
         summary: summary || 'No summary available',
         source: 'Neowin',
-        category: 'Technology',
+        category: mapCategory('Technology'),
         publishedAt,
         scraped: new Date().toISOString()
       });
@@ -218,7 +312,7 @@ async function scrapeAskWoody() {
         link: link.startsWith('http') ? link : `https://www.askwoody.com${link}`,
         summary: summary || 'No summary available',
         source: 'AskWoody',
-        category: 'Technology',
+        category: mapCategory('Technology'),
         publishedAt,
         scraped: new Date().toISOString()
       });
@@ -260,7 +354,7 @@ async function scrapeTechCrunch() {
         link: link.startsWith('http') ? link : `https://techcrunch.com${link}`,
         summary: summary || 'No summary available',
         source: 'TechCrunch',
-        category: 'Technology',
+        category: mapCategory('Technology'),
         publishedAt,
         scraped: new Date().toISOString()
       });
@@ -306,7 +400,7 @@ async function scrapeGeneric(sourceConfig) {
           link: link.startsWith('http') ? link : new URL(link, sourceConfig.url).href,
           summary: summary || 'No summary available',
           source: sourceConfig.name,
-          category: sourceConfig.category,
+          category: mapCategory(sourceConfig.category),
           publishedAt,
           scraped: new Date().toISOString()
         });
@@ -329,22 +423,27 @@ function normalizeTitle(title) {
     .substring(0, 150); // Increased limit for better comparison
 }
 
-// Deduplicate articles by title similarity and exact link matches
+// Enhanced deduplicate articles with improved performance and accuracy
 function deduplicateArticles(articles) {
   const seen = new Set();
   const linksSeen = new Set();
-  const titlesSeen = new Map(); // Map to track similar titles across all sources
+  const titleIndex = new Map(); // Map for O(1) title lookups
+  const articlesMap = new Map(); // Cache articles for quick retrieval
   let duplicatesRemoved = 0;
   
-  return articles.filter(article => {
-    // First, check for exact link duplicates (cross-source duplicates)
+  // Pre-process articles for faster lookups
+  articles.forEach((article, index) => {
+    articlesMap.set(index, article);
+  });
+  
+  return articles.filter((article, index) => {
+    // First, check for exact link duplicates (most reliable)
     if (article.link && linksSeen.has(article.link)) {
       console.log(`[DEDUP] Removed exact link duplicate: "${article.title}" from ${article.source}`);
       duplicatesRemoved++;
       return false;
     }
     
-    // Create a unique key based on normalized title and source
     const normalizedTitle = normalizeTitle(article.title);
     const sourceKey = `${normalizedTitle}::${article.source}`;
     
@@ -355,43 +454,49 @@ function deduplicateArticles(articles) {
       return false;
     }
     
-    // Check for very similar titles from same source (95% similarity)
-    const sourcePrefix = `::${article.source}`;
-    for (const [existingKey, existingTitle] of titlesSeen) {
-      if (existingKey.endsWith(sourcePrefix)) {
-        const similarity = calculateTitleSimilarity(normalizedTitle, existingTitle);
-        if (similarity > 0.95) {
+    // Optimize similarity checking with early termination
+    const titleWords = normalizedTitle.split(' ').filter(w => w.length > 2);
+    const titleWordSet = new Set(titleWords);
+    
+    // Check against existing titles with word overlap pre-filtering
+    for (const [existingKey, { title: existingTitle, words: existingWords }] of titleIndex) {
+      const existingSource = existingKey.split('::')[1];
+      const isSameSource = existingSource === article.source;
+      
+      // Quick word overlap check for performance
+      const wordOverlap = titleWords.filter(w => existingWords.has(w)).length;
+      const maxWords = Math.max(titleWords.length, existingWords.size);
+      const wordOverlapRatio = wordOverlap / maxWords;
+      
+      // Skip detailed comparison if word overlap is too low
+      if (wordOverlapRatio < 0.4) continue;
+      
+      const similarity = calculateTitleSimilarity(normalizedTitle, existingTitle);
+      const threshold = isSameSource ? 0.90 : 0.82; // Lower threshold for cross-source to catch more duplicates
+      
+      if (similarity > threshold) {
+        if (isSameSource) {
           console.log(`[DEDUP] Removed similar same-source article (${Math.round(similarity*100)}% match): "${article.title}" from ${article.source}`);
           duplicatesRemoved++;
           return false;
-        }
-      }
-    }
-    
-    // NEW: Check for very similar titles from different sources (85% similarity)
-    for (const [existingKey, existingTitle] of titlesSeen) {
-      if (!existingKey.endsWith(sourcePrefix)) { // Different source
-        const similarity = calculateTitleSimilarity(normalizedTitle, existingTitle);
-        if (similarity > 0.85) {
-          // Additional check: compare summaries if available
-          const existingSource = existingKey.split('::')[1];
-          const existingArticle = articles.find(a => 
-            normalizeTitle(a.title) === existingTitle && a.source === existingSource
-          );
+        } else {
+          // Cross-source duplicate check with summary comparison
+          const existingArticle = articlesMap.get(titleIndex.get(existingKey).index);
           
-          if (existingArticle && article.summary && existingArticle.summary) {
-            const summaryNorm1 = normalizeTitle(article.summary);
-            const summaryNorm2 = normalizeTitle(existingArticle.summary);
+          if (article.summary && existingArticle.summary && 
+              article.summary.length > 50 && existingArticle.summary.length > 50) {
+            const summaryNorm1 = normalizeTitle(article.summary.substring(0, 200));
+            const summaryNorm2 = normalizeTitle(existingArticle.summary.substring(0, 200));
             const summarySimilarity = calculateTitleSimilarity(summaryNorm1, summaryNorm2);
             
-            if (summarySimilarity > 0.7) {
+            if (summarySimilarity > 0.65) {
               console.log(`[DEDUP] Removed cross-source duplicate (${Math.round(similarity*100)}% title, ${Math.round(summarySimilarity*100)}% summary): "${article.title}" from ${article.source} (original from ${existingSource})`);
               duplicatesRemoved++;
               return false;
             }
-          } else {
-            // No summaries to compare, rely on title similarity
-            console.log(`[DEDUP] Removed cross-source duplicate (${Math.round(similarity*100)}% title match): "${article.title}" from ${article.source} (original from ${existingKey.split('::')[1]})`);
+          } else if (similarity > 0.90) {
+            // High title similarity without summaries to compare
+            console.log(`[DEDUP] Removed cross-source duplicate (${Math.round(similarity*100)}% title match): "${article.title}" from ${article.source} (original from ${existingSource})`);
             duplicatesRemoved++;
             return false;
           }
@@ -399,29 +504,104 @@ function deduplicateArticles(articles) {
       }
     }
     
-    // Article is unique, add to tracking sets
+    // Article is unique, add to tracking structures
     seen.add(sourceKey);
     if (article.link) {
       linksSeen.add(article.link);
     }
-    titlesSeen.set(sourceKey, normalizedTitle);
+    titleIndex.set(sourceKey, { 
+      title: normalizedTitle, 
+      words: titleWordSet, 
+      index 
+    });
     
     return true;
   });
 }
 
-// Calculate similarity between two titles (simple character-based similarity)
+// Enhanced similarity calculation with multiple algorithms
 function calculateTitleSimilarity(title1, title2) {
   if (title1 === title2) return 1.0;
+  if (!title1 || !title2) return 0.0;
   
-  const longer = title1.length > title2.length ? title1 : title2;
-  const shorter = title1.length > title2.length ? title2 : title1;
+  // Combine multiple similarity metrics for better accuracy
+  const jaroSimilarity = calculateJaroSimilarity(title1, title2);
+  const levenshteinSimilarity = calculateLevenshteinSimilarity(title1, title2);
+  const wordSimilarity = calculateWordSimilarity(title1, title2);
+  
+  // Weighted average of different similarity measures
+  return (jaroSimilarity * 0.4 + levenshteinSimilarity * 0.3 + wordSimilarity * 0.3);
+}
+
+// Levenshtein-based similarity (character level)
+function calculateLevenshteinSimilarity(str1, str2) {
+  const longer = str1.length > str2.length ? str1 : str2;
+  const shorter = str1.length > str2.length ? str2 : str1;
   
   if (longer.length === 0) return 1.0;
   
-  // Calculate Levenshtein distance
   const editDistance = levenshteinDistance(longer, shorter);
   return (longer.length - editDistance) / longer.length;
+}
+
+// Jaro similarity (optimized for text comparison)
+function calculateJaroSimilarity(s1, s2) {
+  if (s1 === s2) return 1.0;
+  
+  const len1 = s1.length;
+  const len2 = s2.length;
+  
+  if (len1 === 0 || len2 === 0) return 0.0;
+  
+  const matchWindow = Math.floor(Math.max(len1, len2) / 2) - 1;
+  if (matchWindow < 0) return 0.0;
+  
+  const s1Matches = new Array(len1).fill(false);
+  const s2Matches = new Array(len2).fill(false);
+  
+  let matches = 0;
+  let transpositions = 0;
+  
+  // Identify matches
+  for (let i = 0; i < len1; i++) {
+    const start = Math.max(0, i - matchWindow);
+    const end = Math.min(i + matchWindow + 1, len2);
+    
+    for (let j = start; j < end; j++) {
+      if (s2Matches[j] || s1[i] !== s2[j]) continue;
+      s1Matches[i] = true;
+      s2Matches[j] = true;
+      matches++;
+      break;
+    }
+  }
+  
+  if (matches === 0) return 0.0;
+  
+  // Count transpositions
+  let k = 0;
+  for (let i = 0; i < len1; i++) {
+    if (!s1Matches[i]) continue;
+    while (!s2Matches[k]) k++;
+    if (s1[i] !== s2[k]) transpositions++;
+    k++;
+  }
+  
+  return (matches / len1 + matches / len2 + (matches - transpositions / 2) / matches) / 3.0;
+}
+
+// Word-level similarity
+function calculateWordSimilarity(title1, title2) {
+  const words1 = new Set(title1.toLowerCase().split(/\s+/).filter(w => w.length > 2));
+  const words2 = new Set(title2.toLowerCase().split(/\s+/).filter(w => w.length > 2));
+  
+  if (words1.size === 0 && words2.size === 0) return 1.0;
+  if (words1.size === 0 || words2.size === 0) return 0.0;
+  
+  const intersection = new Set([...words1].filter(w => words2.has(w)));
+  const union = new Set([...words1, ...words2]);
+  
+  return intersection.size / union.size; // Jaccard similarity
 }
 
 // Simple Levenshtein distance calculation
@@ -495,11 +675,14 @@ async function getAllNews() {
           
           // Add sentiment analysis and priority scoring
           const analysis = analyzeArticle(articleWithSummary);
-          return {
+          const enrichedArticle = {
             ...articleWithSummary,
             ...analysis
           };
-        });
+          
+          // Validate and sanitize the article
+          return validateArticle(enrichedArticle);
+        }).filter(Boolean); // Remove any null articles
         
         allArticles.push(...articlesWithAnalysis);
         successfulSources++;
@@ -656,7 +839,20 @@ function extractKeywords(content) {
   return relevantTerms.filter(term => content.includes(term));
 }
 
+// Test a single source for the API endpoint
+async function testSingleSource(sourceConfig) {
+  try {
+    const scraper = getScraperForSource(sourceConfig);
+    const articles = await scraper();
+    return articles;
+  } catch (error) {
+    console.error(`Error testing source ${sourceConfig.name}:`, error.message);
+    throw error;
+  }
+}
+
 module.exports = {
   getAllNews,
-  loadDynamicSources
+  loadDynamicSources,
+  testSingleSource
 };

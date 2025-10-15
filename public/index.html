@@ -3,12 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CyberTech News Aggregator</title>
+    <title>AI News Hub</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1a1d23">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="AI News Hub">
 </head>
 <body>
     <div class="container" role="main">
@@ -22,15 +27,46 @@
                             <polygon points="18,5 18,11 24,14 24,8 18,5" fill="none" stroke="currentColor" stroke-width="1"/>
                             <polygon points="6,5 6,11 0,14 0,8 6,5" fill="none" stroke="currentColor" stroke-width="1"/>
                         </svg>
-                        CyberTech News
+                        AI News Hub
                     </h1>
                     
                     <div class="search-container" role="search">
                         <i class="fas fa-search"></i>
-                        <input type="text" id="searchInput" placeholder="Search articles..." class="search-input" aria-label="Search articles">
+                        <input type="text" id="searchInput" placeholder="Try: +AI -ChatGPT &quot;machine learning&quot; category:industry" class="search-input" aria-label="Smart search with operators">
                         <button id="clearSearch" class="clear-search" style="display: none;" aria-label="Clear search">
                             <i class="fas fa-times"></i>
                         </button>
+                    </div>
+                    
+                    <div class="search-help" id="searchHelp" style="display: none;" role="dialog" aria-labelledby="search-help-title" aria-describedby="search-help-desc">
+                        <div class="search-help-content">
+                            <h4 id="search-help-title"><i class="fas fa-lightbulb"></i> Smart Search Tips</h4>
+                            <p id="search-help-desc" class="sr-only">Use these operators to refine your search</p>
+                            <div class="search-operators">
+                                <div class="operator">
+                                    <span class="op-symbol">+term</span>
+                                    <span class="op-desc">Must include this term</span>
+                                </div>
+                                <div class="operator">
+                                    <span class="op-symbol">-term</span>
+                                    <span class="op-desc">Exclude this term</span>
+                                </div>
+                                <div class="operator">
+                                    <span class="op-symbol">"exact phrase"</span>
+                                    <span class="op-desc">Find exact phrase</span>
+                                </div>
+                                <div class="operator">
+                                    <span class="op-symbol">category:news</span>
+                                    <span class="op-desc">Filter by category</span>
+                                </div>
+                            </div>
+                            <div class="search-presets">
+                                <button class="search-preset" data-query="+AI +breakthrough">AI Breakthroughs</button>
+                                <button class="search-preset" data-query="+research +paper">Research Papers</button>
+                                <button class="search-preset" data-query="category:tools +update">Tool Updates</button>
+                                <button class="search-preset" data-query="+OpenAI +announcement">OpenAI News</button>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="control-buttons">
@@ -61,7 +97,7 @@
                                 <i class="fas fa-cogs"></i>
                                 <span>Admin</span>
                             </a>
-                            <button id="aboutBtn" class="control-btn about-btn" title="About CyberTech News">
+                            <button id="aboutBtn" class="control-btn about-btn" title="About AI News Hub">
                                 <i class="fas fa-info-circle"></i>
                                 <span>About</span>
                             </button>
@@ -80,17 +116,25 @@
                     
                     <div class="filter-buttons" role="tablist" aria-label="Article category filters">
                         <button class="filter-btn active" data-filter="all" role="tab" aria-selected="true" aria-controls="newsGrid">All</button>
-                        <button class="filter-btn" data-filter="Cybersecurity" role="tab" aria-selected="false" aria-controls="newsGrid">
-                            <i class="fas fa-lock"></i>
-                            Security
+                        <button class="filter-btn" data-filter="AI Industry" role="tab" aria-selected="false" aria-controls="newsGrid">
+                            <i class="fas fa-industry"></i>
+                            Industry
                         </button>
-                        <button class="filter-btn" data-filter="Technology" role="tab" aria-selected="false" aria-controls="newsGrid">
-                            <i class="fas fa-microchip"></i>
-                            Tech
+                        <button class="filter-btn" data-filter="AI News" role="tab" aria-selected="false" aria-controls="newsGrid">
+                            <i class="fas fa-newspaper"></i>
+                            News
                         </button>
-                        <button class="filter-btn" data-filter="AI" role="tab" aria-selected="false" aria-controls="newsGrid">
-                            <i class="fas fa-brain"></i>
-                            AI
+                        <button class="filter-btn" data-filter="AI Research" role="tab" aria-selected="false" aria-controls="newsGrid">
+                            <i class="fas fa-flask"></i>
+                            Research
+                        </button>
+                        <button class="filter-btn" data-filter="Coding Tools" role="tab" aria-selected="false" aria-controls="newsGrid">
+                            <i class="fas fa-code"></i>
+                            Tools
+                        </button>
+                        <button class="filter-btn" data-filter="AI Tools" role="tab" aria-selected="false" aria-controls="newsGrid">
+                            <i class="fas fa-robot"></i>
+                            AI Tools
                         </button>
                     </div>
                     
@@ -109,75 +153,6 @@
                         </select>
                     </div>
                     
-                    <div class="include-filter-container">
-                        <label for="includeInput" class="include-filter-label" id="includeFilterLabel">
-                            <i class="fas fa-eye"></i>
-                            Include Keywords:
-                        </label>
-                        <div class="include-input-wrapper">
-                            <input type="text" id="includeInput" class="include-input" 
-                                   placeholder="e.g., cybersecurity, AI, breaking..." 
-                                   aria-labelledby="includeFilterLabel"
-                                   aria-describedby="includeHelp">
-                            <button id="addIncludeBtn" class="add-include-btn" aria-label="Add include filter">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                        </div>
-                        <div class="include-presets">
-                            <button class="include-preset-btn" data-keyword="cybersecurity">Cybersecurity</button>
-                            <button class="include-preset-btn" data-keyword="AI">AI/ML</button>
-                            <button class="include-preset-btn" data-keyword="breaking">Breaking News</button>
-                        </div>
-                        <div class="include-tags" id="includeTags" aria-live="polite"></div>
-                        <div class="include-controls">
-                            <button id="showOnlyIncludedBtn" class="include-control-btn" style="display: none;">
-                                <i class="fas fa-filter"></i>
-                                Show Only Included (<span id="includedCount">0</span>)
-                            </button>
-                            <button id="clearIncludesBtn" class="include-control-btn" style="display: none;">
-                                <i class="fas fa-times-circle"></i>
-                                Clear All
-                            </button>
-                        </div>
-                        <small id="includeHelp" class="include-help">
-                            Include keywords: Show only articles containing these terms. Use quotes for exact phrases.
-                        </small>
-                    </div>
-                    
-                    <div class="exclusion-filter-container">
-                        <label for="exclusionInput" class="exclusion-filter-label" id="exclusionFilterLabel">
-                            <i class="fas fa-eye-slash"></i>
-                            Exclude Keywords:
-                        </label>
-                        <div class="exclusion-input-wrapper">
-                            <input type="text" id="exclusionInput" class="exclusion-input" 
-                                   placeholder="e.g., Claude Code, ChatGPT..." 
-                                   aria-labelledby="exclusionFilterLabel"
-                                   aria-describedby="exclusionHelp">
-                            <button id="addExclusionBtn" class="add-exclusion-btn" aria-label="Add exclusion filter">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                        </div>
-                        <div class="exclusion-presets">
-                            <button class="preset-btn" data-keyword="Claude Code">Claude Code</button>
-                            <button class="preset-btn" data-keyword="ChatGPT">ChatGPT</button>
-                            <button class="preset-btn" data-keyword="AI">AI</button>
-                        </div>
-                        <div class="exclusion-tags" id="exclusionTags" aria-live="polite"></div>
-                        <div class="exclusion-controls">
-                            <button id="showHiddenBtn" class="exclusion-control-btn" style="display: none;">
-                                <i class="fas fa-eye"></i>
-                                Show Hidden (<span id="hiddenCount">0</span>)
-                            </button>
-                            <button id="clearExclusionsBtn" class="exclusion-control-btn" style="display: none;">
-                                <i class="fas fa-times-circle"></i>
-                                Clear All
-                            </button>
-                        </div>
-                        <small id="exclusionHelp" class="exclusion-help">
-                            Use quotes for exact phrases: "Claude Code". Separate multiple terms with commas.
-                        </small>
-                    </div>
                 </div>
             </div>
         </header>
@@ -273,7 +248,7 @@
         <div class="modal-overlay" onclick="closeAboutModal()"></div>
         <div class="modal-content about-modal-content">
             <div class="modal-header">
-                <h3 id="aboutModalTitle"><i class="fas fa-info-circle"></i> About CyberTech News</h3>
+                <h3 id="aboutModalTitle"><i class="fas fa-info-circle"></i> About AI News Hub</h3>
                 <button onclick="closeAboutModal()" class="close-btn">
                     <i class="fas fa-times"></i>
                 </button>
@@ -288,17 +263,17 @@
                             <polygon points="6,5 6,11 0,14 0,8 6,5" fill="none" stroke="currentColor" stroke-width="1"/>
                         </svg>
                     </div>
-                    <h4>CyberTech News Aggregator</h4>
-                    <p class="version">Version <span class="version-number">2.1.0</span></p>
+                    <h4>AI News Hub</h4>
+                    <p class="version">Version <span class="version-number">3.0.0</span></p>
                     <p class="description">
-                        A comprehensive news aggregation platform bringing you the latest in cybersecurity and technology from trusted sources worldwide.
+                        A comprehensive AI news aggregation platform bringing you the latest developments in artificial intelligence, machine learning, and AI tools from trusted sources worldwide.
                     </p>
                 </div>
                 
                 <div class="about-section">
                     <h5><i class="fas fa-newspaper"></i> Features</h5>
                     <ul class="feature-list">
-                        <li><i class="fas fa-check"></i> 13 Premium news sources</li>
+                        <li><i class="fas fa-check"></i> 15 Premium AI news sources</li>
                         <li><i class="fas fa-check"></i> Real-time article aggregation</li>
                         <li><i class="fas fa-check"></i> Smart duplicate detection</li>
                         <li><i class="fas fa-check"></i> Trending topics analysis</li>
@@ -348,7 +323,7 @@
                 <div class="about-section">
                     <h5><i class="fas fa-handshake"></i> Credits</h5>
                     <p class="credits-attribution">
-                        Envisioned by <strong>Kyle Shaver</strong>, Coded by <strong>Claude Code</strong>
+                        Created by <strong>Kyle Shaver</strong>, Coded by <strong>Claude Code</strong>
                     </p>
                 </div>
             </div>
@@ -390,11 +365,31 @@
 
     <footer class="footer">
         <div class="footer-content">
-            <p>&copy; 2024 CyberTech News Aggregator. <span id="dynamicSources">Loading sources...</span></p>
+            <p>&copy; 2025 AI News Hub. <span id="dynamicSources">Loading sources...</span></p>
             <div class="footer-links">
                 <a href="#" onclick="refreshNews()">Refresh</a>
                 <a href="https://github.com" target="_blank">GitHub</a>
             </div>
+        </div>
+        <div class="ultra-attribution">
+            <div class="attribution-content">
+                <span class="attribution-part vision">
+                    <span class="attr-icon">◈</span>
+                    <span class="attr-text">Created by</span>
+                    <span class="attr-name">Kyle</span>
+                </span>
+                <span class="attribution-divider">
+                    <span class="divider-dot"></span>
+                    <span class="divider-line"></span>
+                    <span class="divider-dot"></span>
+                </span>
+                <span class="attribution-part code">
+                    <span class="attr-icon">◉</span>
+                    <span class="attr-text">Coded by</span>
+                    <span class="attr-name">Claude</span>
+                </span>
+            </div>
+            <div class="attribution-glow"></div>
         </div>
     </footer>
 
@@ -432,6 +427,8 @@
         </div>
     </div>
 
+    <script src="utils/sanitizer.js"></script>
+    <script src="utils/deduplication.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

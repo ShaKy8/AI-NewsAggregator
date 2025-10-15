@@ -11,13 +11,53 @@ class NewsAggregator {
         this.autoRefreshInterval = null;
         this.searchQuery = '';
         this.trendingTopics = [];
-        this.excludedKeywords = JSON.parse(localStorage.getItem('excludedKeywords') || '[]');
-        this.includedKeywords = JSON.parse(localStorage.getItem('includedKeywords') || '[]');
+        // Temporary legacy properties to prevent runtime errors during cleanup
+        this.excludedKeywords = [];
+        this.includedKeywords = [];
         this.showHiddenArticles = false;
         this.showOnlyIncluded = false;
         this.hiddenArticlesCount = 0;
         this.includedArticlesCount = 0;
+
+        // Deduplication settings
+        this.deduplicationEnabled = localStorage.getItem('deduplicationEnabled') !== 'false'; // Default true
+        this.deduplicator = new ArticleDeduplicator({
+            titleSimilarityThreshold: 0.75,
+            timeProximityHours: 6,
+            enableDeduplication: this.deduplicationEnabled
+        });
+        this.expandedDuplicates = new Set(); // Track which duplicate groups are expanded
+
+        // AI Summary settings
+        this.expandedAISummaries = new Set(); // Track which AI summaries are expanded
+        this.generatingAISummaries = new Set(); // Track which summaries are being generated
+
+        // Pre-compile regex patterns for better performance
+        this.phraseRegex = /"([^"]+)"/g;
+        this.categoryRegex = /category:(\w+)/g;
+        this.registerServiceWorker();
         this.init();
+    }
+    
+    async registerServiceWorker() {
+        if ('serviceWorker' in navigator) {
+            try {
+                const registration = await navigator.serviceWorker.register('/sw.js');
+                console.log('Service Worker registered:', registration);
+                
+                // Listen for service worker messages
+                navigator.serviceWorker.addEventListener('message', event => {
+                    if (event.data.type === 'news-refreshed') {
+                        console.log('News refreshed in background');
+                        this.showNotification('News updated', 'Latest articles have been refreshed');
+                        this.loadNews(); // Reload news from cache
+                    }
+                });
+                
+            } catch (error) {
+                console.log('Service Worker registration failed:', error);
+            }
+        }
     }
 
     init() {
@@ -28,10 +68,15 @@ class NewsAggregator {
         this.updateSourcesCount();
         this.startRealTimeClock();
         this.setupStickyHeader();
-        this.renderExclusionTags();
-        this.renderIncludeTags();
+        this.cleanupLegacyStorage();
         this.loadNews();
         this.loadDynamicSources();
+    }
+
+    cleanupLegacyStorage() {
+        // Remove old localStorage keys from legacy filtering system
+        localStorage.removeItem('excludedKeywords');
+        localStorage.removeItem('includedKeywords');
     }
 
     bindEventListeners() {
@@ -66,7 +111,31 @@ class NewsAggregator {
         const clearSearch = document.getElementById('clearSearch');
         
         searchInput.addEventListener('input', (e) => this.handleSearch(e.target.value));
+        searchInput.addEventListener('focus', () => {
+            this.isSearchFocused = true;
+            if (searchInput.value && !this.parseSmartSearch(searchInput.value).hasOperators) {
+                const helpDiv = document.getElementById('searchHelp');
+                if (helpDiv) helpDiv.style.display = 'block';
+            }
+        });
+        searchInput.addEventListener('blur', () => {
+            this.isSearchFocused = false;
+            setTimeout(() => {
+                const helpDiv = document.getElementById('searchHelp');
+                if (helpDiv) helpDiv.style.display = 'none';
+            }, 200);
+        });
         clearSearch.addEventListener('click', () => this.clearSearch());
+        
+        // Add search preset functionality
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('search-preset')) {
+                const query = e.target.dataset.query;
+                searchInput.value = query;
+                this.handleSearch(query);
+                document.getElementById('searchHelp').style.display = 'none';
+            }
+        });
         
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
@@ -95,57 +164,6 @@ class NewsAggregator {
             this.filterByAge(e.target.value);
         });
         
-        // Exclusion filter event listeners
-        document.getElementById('exclusionInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                this.addExclusionKeyword();
-            }
-        });
-        
-        document.getElementById('addExclusionBtn').addEventListener('click', () => {
-            this.addExclusionKeyword();
-        });
-        
-        document.getElementById('showHiddenBtn').addEventListener('click', () => {
-            this.toggleHiddenArticles();
-        });
-        
-        document.getElementById('clearExclusionsBtn').addEventListener('click', () => {
-            this.clearAllExclusions();
-        });
-        
-        // Exclusion preset button event listeners
-        document.querySelectorAll('.preset-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                this.addExclusionKeyword(e.target.dataset.keyword);
-            });
-        });
-        
-        // Include filter event listeners
-        document.getElementById('includeInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                this.addIncludeKeyword();
-            }
-        });
-        
-        document.getElementById('addIncludeBtn').addEventListener('click', () => {
-            this.addIncludeKeyword();
-        });
-        
-        document.getElementById('showOnlyIncludedBtn').addEventListener('click', () => {
-            this.toggleOnlyIncluded();
-        });
-        
-        document.getElementById('clearIncludesBtn').addEventListener('click', () => {
-            this.clearAllIncludes();
-        });
-        
-        // Include preset button event listeners
-        document.querySelectorAll('.include-preset-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                this.addIncludeKeyword(e.target.dataset.keyword);
-            });
-        });
     }
 
     async loadNews() {
@@ -190,7 +208,14 @@ class NewsAggregator {
         try {
             const response = await fetch('/api/refresh');
             if (!response.ok) {
-                const errorData = await response.json();
+                console.error('Refresh failed with status:', response.status);
+                let errorData;
+                try {
+                    errorData = await response.json();
+                } catch (e) {
+                    console.error('Failed to parse error response:', e);
+                    errorData = { details: `HTTP ${response.status} ${response.statusText}` };
+                }
                 throw new Error(errorData.details || 'Failed to refresh news');
             }
             
@@ -203,9 +228,17 @@ class NewsAggregator {
             this.showNotification(`News refreshed successfully! Found ${result.count} articles.`);
         } catch (error) {
             console.error('Error refreshing news:', error);
-            const errorMessage = error.message.includes('network') || error.message.includes('source') 
-                ? 'Network or source error. Some news sources may be temporarily unavailable.'
-                : 'Failed to refresh news. Please try again.';
+            console.error('Error type:', error.name);
+            console.error('Error stack:', error.stack);
+            
+            let errorMessage;
+            if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+                errorMessage = 'Network error: Unable to connect to the server. Please check your connection.';
+            } else if (error.message.includes('network') || error.message.includes('source')) {
+                errorMessage = 'Network or source error. Some news sources may be temporarily unavailable.';
+            } else {
+                errorMessage = error.message || 'Failed to refresh news. Please try again.';
+            }
             this.showError(errorMessage);
         } finally {
             clearInterval(progressInterval);
@@ -253,7 +286,10 @@ class NewsAggregator {
         newsGrid.style.display = 'grid';
         noArticles.style.display = 'none';
         
-        newsGrid.innerHTML = this.filteredArticles.map(article => this.createArticleCard(article)).join('');
+        // Use safer DOM manipulation instead of innerHTML
+        const articlesHTML = this.filteredArticles.map(article => this.createArticleCard(article)).join('');
+        const sanitizedHTML = window.Sanitizer ? window.Sanitizer.sanitizeHtml(articlesHTML) : articlesHTML;
+        newsGrid.innerHTML = sanitizedHTML;
         
         newsGrid.querySelectorAll('.news-card').forEach((card, index) => {
             card.style.animationDelay = `${index * 0.1}s`;
@@ -271,7 +307,8 @@ class NewsAggregator {
         const readingTime = this.calculateReadingTime(article.summary || '');
         
         // Combine AI summary with regular summary for simplified display
-        const combinedSummary = article.aiSummary || article.summary || '';
+        // aiSummary is an object {overview, keyPoints}, so extract the overview string
+        const combinedSummary = (article.aiSummary?.overview) || article.summary || '';
         
         return `
             <article class="news-card ${isSaved ? 'saved' : ''} ${isRead ? 'read' : ''} ${article.priority ? 'priority-' + article.priority : ''}" data-article-id="${article.id}" role="article" aria-labelledby="title-${article.id}">
@@ -292,6 +329,7 @@ class NewsAggregator {
                         ${article.category}
                     </span>
                     ${this.renderPriorityBadges(article)}
+                    ${this.renderDuplicateBadge(article)}
                 </div>
                 
                 <!-- 2. Article Title (Primary CTA) -->
@@ -315,12 +353,23 @@ class NewsAggregator {
                         ${timeAgo} • ${readingTime} min read
                     </span>
                 </div>
+
+                <!-- 5. AI Summary Section -->
+                ${this.renderAISummarySection(article)}
+
+                <!-- 6. Duplicate Articles Section -->
+                ${this.renderDuplicatesSection(article)}
             </article>
         `;
     }
 
     getCategoryIcon(category) {
         const icons = {
+            'AI Industry': 'fas fa-industry',
+            'AI News': 'fas fa-newspaper', 
+            'AI Research': 'fas fa-flask',
+            'Coding Tools': 'fas fa-code',
+            'AI Tools': 'fas fa-robot',
             'Cybersecurity': 'fas fa-shield-alt',
             'Technology': 'fas fa-microchip'
         };
@@ -366,6 +415,248 @@ class NewsAggregator {
         return badges;
     }
 
+    renderDuplicateBadge(article) {
+        if (!article.duplicateCount || article.duplicateCount === 0) {
+            return '';
+        }
+
+        const isExpanded = this.expandedDuplicates.has(article.id);
+        const sourcesText = article.allSources.join(', ');
+
+        return `
+            <button class="duplicate-badge"
+                    data-article-id="${article.id}"
+                    title="This story is covered by ${article.duplicateCount + 1} sources: ${sourcesText}"
+                    aria-label="${article.duplicateCount} similar ${article.duplicateCount === 1 ? 'story' : 'stories'} from other sources">
+                <i class="fas fa-copy"></i>
+                ${article.duplicateCount} similar
+                <i class="fas fa-chevron-${isExpanded ? 'up' : 'down'}"></i>
+            </button>
+        `;
+    }
+
+    renderDuplicatesSection(article) {
+        if (!article.duplicateCount || article.duplicateCount === 0) {
+            return '';
+        }
+
+        const isExpanded = this.expandedDuplicates.has(article.id);
+        if (!isExpanded) {
+            return '';
+        }
+
+        const duplicatesList = article.duplicates.map(dup => {
+            const timeAgo = this.getTimeAgo(dup.scraped || dup.publishedAt || dup.date);
+            const url = dup.url || dup.link || '#';
+            return `
+                <div class="duplicate-item">
+                    <div class="duplicate-source-badge">${this.escapeHtml(dup.source)}</div>
+                    <div class="duplicate-info">
+                        <a href="${url}" target="_blank" rel="noopener noreferrer" class="duplicate-title">
+                            ${this.escapeHtml(dup.title)}
+                        </a>
+                        <span class="duplicate-time">${timeAgo}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        return `
+            <div class="duplicates-section" data-article-id="${article.id}">
+                <div class="duplicates-header">
+                    <i class="fas fa-layer-group"></i>
+                    <span>Same story from ${article.duplicateCount} other ${article.duplicateCount === 1 ? 'source' : 'sources'}:</span>
+                </div>
+                <div class="duplicates-list">
+                    ${duplicatesList}
+                </div>
+            </div>
+        `;
+    }
+
+    toggleDuplicates(articleId) {
+        console.log('Toggling duplicates for article:', articleId);
+        if (this.expandedDuplicates.has(articleId)) {
+            this.expandedDuplicates.delete(articleId);
+            console.log('Collapsed duplicates for:', articleId);
+        } else {
+            this.expandedDuplicates.add(articleId);
+            console.log('Expanded duplicates for:', articleId);
+        }
+        this.renderNews();
+    }
+
+    renderAISummarySection(article) {
+        const hasSummary = article.aiSummary && article.aiSummary.overview;
+        const isExpanded = this.expandedAISummaries?.has(article.id);
+        const isGenerating = this.generatingAISummaries?.has(article.id);
+
+        if (!hasSummary && !isGenerating) {
+            // Show "Generate Summary" button
+            return `
+                <div class="ai-summary-section">
+                    <button class="ai-summary-button generate"
+                            data-article-id="${article.id}"
+                            title="Generate AI summary with Claude">
+                        <i class="fas fa-sparkles"></i>
+                        AI Summary
+                    </button>
+                </div>
+            `;
+        }
+
+        if (isGenerating) {
+            // Show loading state
+            return `
+                <div class="ai-summary-section">
+                    <div class="ai-summary-button loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        Generating...
+                    </div>
+                </div>
+            `;
+        }
+
+        // Show summary badge and expandable content
+        return `
+            <div class="ai-summary-section">
+                <button class="ai-summary-button has-summary ${isExpanded ? 'expanded' : ''}"
+                        data-article-id="${article.id}"
+                        title="Click to ${isExpanded ? 'collapse' : 'expand'} AI summary">
+                    <i class="fas fa-robot"></i>
+                    AI Summary
+                    <i class="fas fa-chevron-${isExpanded ? 'up' : 'down'}"></i>
+                </button>
+                ${isExpanded ? this.renderAISummaryContent(article) : ''}
+            </div>
+        `;
+    }
+
+    renderAISummaryContent(article) {
+        console.log('[AI] renderAISummaryContent called for:', article.title);
+        if (!article.aiSummary) {
+            console.log('[AI] No aiSummary found');
+            return '';
+        }
+
+        console.log('[AI] aiSummary object:', article.aiSummary);
+        const { overview, keyPoints } = article.aiSummary;
+        console.log('[AI] overview:', overview);
+        console.log('[AI] keyPoints:', keyPoints);
+
+        const keyPointsList = keyPoints && keyPoints.length > 0
+            ? keyPoints.map(point => `<li>${this.escapeHtml(point)}</li>`).join('')
+            : '';
+
+        const html = `
+            <div class="ai-summary-content">
+                <div class="ai-summary-overview">
+                    <i class="fas fa-lightbulb"></i>
+                    <span>${this.escapeHtml(overview)}</span>
+                </div>
+                ${keyPointsList ? `
+                    <div class="ai-summary-points">
+                        <strong>Key Points:</strong>
+                        <ul>
+                            ${keyPointsList}
+                        </ul>
+                    </div>
+                ` : ''}
+                <div class="ai-summary-footer">
+                    <i class="fas fa-check-circle"></i>
+                    Summary generated by Claude AI
+                </div>
+            </div>
+        `;
+
+        console.log('[AI] Generated HTML length:', html.length);
+        return html;
+    }
+
+    async toggleAISummary(articleId) {
+        console.log('[AI] toggleAISummary called for:', articleId);
+        console.log('[AI] Total articles:', this.articles.length);
+        console.log('[AI] Filtered articles:', this.filteredArticles.length);
+
+        const article = this.filteredArticles.find(a => a.id === articleId);
+        if (!article) {
+            console.error('[AI] Article not found in filteredArticles:', articleId);
+            // Try looking in all articles
+            const allArticle = this.articles.find(a => a.id === articleId);
+            if (!allArticle) {
+                console.error('[AI] Article not found in articles either:', articleId);
+                this.showError('Article not found. Please refresh the page.');
+                return;
+            }
+            console.log('[AI] Found article in all articles, using that');
+            article = allArticle;
+        }
+
+        console.log('[AI] Found article:', article.title);
+
+        // Initialize tracking sets if needed
+        if (!this.expandedAISummaries) this.expandedAISummaries = new Set();
+        if (!this.generatingAISummaries) this.generatingAISummaries = new Set();
+
+        // If summary exists, just toggle expand/collapse
+        if (article.aiSummary) {
+            console.log('[AI] Article already has summary, toggling expand/collapse');
+            if (this.expandedAISummaries.has(articleId)) {
+                this.expandedAISummaries.delete(articleId);
+                console.log('[AI] Collapsed summary');
+            } else {
+                this.expandedAISummaries.add(articleId);
+                console.log('[AI] Expanded summary');
+            }
+            this.renderNews();
+            return;
+        }
+
+        // Generate new summary
+        console.log('[AI] Generating new summary...');
+        this.generatingAISummaries.add(articleId);
+        this.renderNews();
+
+        try {
+            console.log('[AI] Sending request to /api/summary');
+            const response = await fetch('/api/summary', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ article })
+            });
+
+            console.log('[AI] Response status:', response.status);
+
+            if (!response.ok) {
+                const error = await response.json();
+                console.error('[AI] API error:', error);
+                throw new Error(error.message || 'Failed to generate summary');
+            }
+
+            const { summary } = await response.json();
+            console.log('[AI] Summary received:', summary);
+
+            // Update article with summary in both arrays
+            article.aiSummary = summary;
+            const mainArticle = this.articles.find(a => a.id === articleId);
+            if (mainArticle) {
+                mainArticle.aiSummary = summary;
+            }
+
+            this.expandedAISummaries.add(articleId);
+
+            this.showNotification('AI summary generated successfully!');
+            console.log('[AI] Summary generation complete');
+
+        } catch (error) {
+            console.error('[AI] Error generating AI summary:', error);
+            this.showError(`Failed to generate summary: ${error.message}`);
+        } finally {
+            this.generatingAISummaries.delete(articleId);
+            this.renderNews();
+        }
+    }
+
     getTimeAgo(dateString) {
         try {
             const date = new Date(dateString);
@@ -384,11 +675,22 @@ class NewsAggregator {
     }
 
     truncateText(text, maxLength) {
-        if (!text || text.length <= maxLength) return text;
+        if (!text) return '';
+        // Ensure text is a string
+        if (typeof text !== 'string') {
+            console.warn('truncateText received non-string:', typeof text, text);
+            text = String(text);
+        }
+        if (text.length <= maxLength) return text;
         return text.substring(0, maxLength).trim() + '...';
     }
 
     escapeHtml(text) {
+        // Use the global Sanitizer utility
+        return window.Sanitizer ? window.Sanitizer.escapeHtml(text) : this.fallbackEscapeHtml(text);
+    }
+    
+    fallbackEscapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
@@ -398,25 +700,8 @@ class NewsAggregator {
         const total = this.filteredArticles.length;
         let totalText = total.toString();
         
-        // Enhanced stats display for filter interactions
-        if (this.includedKeywords.length > 0 || this.excludedKeywords.length > 0) {
-            const baseTotal = this.articles.length;
-            const filterInfo = [];
-            
-            if (this.includedKeywords.length > 0) {
-                filterInfo.push(`${this.includedArticlesCount} included`);
-            }
-            
-            if (this.excludedKeywords.length > 0 && this.hiddenArticlesCount > 0) {
-                filterInfo.push(`${this.hiddenArticlesCount} hidden`);
-            }
-            
-            if (filterInfo.length > 0) {
-                totalText = `${total} of ${baseTotal} (${filterInfo.join(', ')})`;
-            } else {
-                totalText = `${total} of ${baseTotal}`;
-            }
-        } else if (total !== this.articles.length) {
+        // Show filtered vs total count when smart search is active  
+        if (total !== this.articles.length) {
             totalText = `${total} of ${this.articles.length}`;
         }
         
@@ -431,9 +716,11 @@ class NewsAggregator {
 
     updateFilterCounts() {
         const allCount = this.articles.length;
-        const techCount = this.articles.filter(article => article.category === 'Technology').length;
-        const securityCount = this.articles.filter(article => article.category === 'Cybersecurity').length;
-        const aiCount = this.articles.filter(article => this.isAIRelated(article)).length;
+        const aiIndustryCount = this.articles.filter(article => article.category === 'AI Industry').length;
+        const aiNewsCount = this.articles.filter(article => article.category === 'AI News').length;
+        const aiResearchCount = this.articles.filter(article => article.category === 'AI Research').length;
+        const codingToolsCount = this.articles.filter(article => article.category === 'Coding Tools').length;
+        const aiToolsCount = this.articles.filter(article => article.category === 'AI Tools').length;
 
         // Update button text with counts
         document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -449,17 +736,25 @@ class NewsAggregator {
                     count = allCount;
                     label = 'All';
                     break;
-                case 'Technology':
-                    count = techCount;
-                    label = 'Tech';
+                case 'AI Industry':
+                    count = aiIndustryCount;
+                    label = 'Industry';
                     break;
-                case 'Cybersecurity':
-                    count = securityCount;
-                    label = 'Security';
+                case 'AI News':
+                    count = aiNewsCount;
+                    label = 'News';
                     break;
-                case 'AI':
-                    count = aiCount;
-                    label = 'AI';
+                case 'AI Research':
+                    count = aiResearchCount;
+                    label = 'Research';
+                    break;
+                case 'Coding Tools':
+                    count = codingToolsCount;
+                    label = 'Tools';
+                    break;
+                case 'AI Tools':
+                    count = aiToolsCount;
+                    label = 'AI Tools';
                     break;
             }
             
@@ -566,10 +861,40 @@ class NewsAggregator {
     }
     
     processArticles() {
+        // First add IDs to all articles
         this.articles = this.articles.map(article => ({
             ...article,
             id: article.id || this.generateId(article)
         }));
+
+        // Then apply deduplication with error handling
+        if (this.deduplicationEnabled) {
+            try {
+                console.log('Starting deduplication on', this.articles.length, 'articles...');
+                const startTime = performance.now();
+
+                this.articles = this.deduplicator.deduplicateArticles(this.articles);
+
+                const endTime = performance.now();
+                console.log('Deduplication completed in', (endTime - startTime).toFixed(2), 'ms');
+
+                // Log deduplication stats
+                const originalCount = this.articles.reduce((sum, a) => sum + 1 + (a.duplicateCount || 0), 0);
+                const stats = this.deduplicator.getDeduplicationStats(originalCount, this.articles);
+                console.log('Deduplication stats:', stats);
+            } catch (error) {
+                console.error('Error during deduplication:', error);
+                console.error('Disabling deduplication and continuing...');
+                // Mark all articles as having no duplicates if deduplication fails
+                this.articles = this.articles.map(article => ({
+                    ...article,
+                    isDuplicate: false,
+                    duplicateCount: 0,
+                    duplicates: [],
+                    allSources: [article.source]
+                }));
+            }
+        }
     }
     
     generateId(article) {
@@ -583,11 +908,7 @@ class NewsAggregator {
         let excluded = [];
         
         if (this.currentFilter !== 'all') {
-            if (this.currentFilter === 'AI') {
-                filtered = filtered.filter(article => this.isAIRelated(article));
-            } else {
-                filtered = filtered.filter(article => article.category === this.currentFilter);
-            }
+            filtered = filtered.filter(article => article.category === this.currentFilter);
         }
         
         if (this.currentAgeFilter !== 'all') {
@@ -595,48 +916,11 @@ class NewsAggregator {
         }
         
         if (this.searchQuery) {
-            const query = this.searchQuery.toLowerCase();
-            filtered = filtered.filter(article => 
-                article.title.toLowerCase().includes(query) ||
-                (article.summary && article.summary.toLowerCase().includes(query)) ||
-                article.source.toLowerCase().includes(query)
-            );
+            const searchTerms = this.parseSmartSearch(this.searchQuery);
+            filtered = filtered.filter(article => this.matchesSmartSearch(article, searchTerms));
         }
         
-        // Apply inclusion filters first (unless showing only included articles)
-        if (this.includedKeywords.length > 0) {
-            const beforeInclusionCount = filtered.length;
-            const included = filtered.filter(article => this.isArticleIncluded(article));
-            const notIncluded = filtered.filter(article => !this.isArticleIncluded(article));
-            
-            if (this.showOnlyIncluded) {
-                this.filteredArticles = included;
-                this.includedArticlesCount = included.length;
-                this.hiddenArticlesCount = notIncluded.length;
-                this.updateHiddenControls();
-                this.updateIncludeControls();
-                return;
-            } else {
-                filtered = included;
-                this.includedArticlesCount = included.length;
-            }
-        } else {
-            this.includedArticlesCount = 0;
-        }
-        
-        // Apply exclusion filters (unless showing hidden articles)
-        if (this.excludedKeywords.length > 0 && !this.showHiddenArticles) {
-            const beforeExclusionCount = filtered.length;
-            filtered = filtered.filter(article => !this.isArticleExcluded(article));
-            excluded = this.articles.filter(article => this.isArticleExcluded(article));
-            this.hiddenArticlesCount = beforeExclusionCount - filtered.length;
-        } else if (this.includedKeywords.length === 0) {
-            this.hiddenArticlesCount = 0;
-        }
-        
-        this.filteredArticles = this.showHiddenArticles ? [...filtered, ...excluded] : filtered;
-        this.updateHiddenControls();
-        this.updateIncludeControls();
+        this.filteredArticles = filtered;
     }
     
     isAIRelated(article) {
@@ -917,9 +1201,16 @@ class NewsAggregator {
     }
     
     handleSearch(query) {
-        this.searchQuery = query;
+        this.searchQuery = window.Sanitizer ? window.Sanitizer.sanitizeSearchInput(query) : this.fallbackSanitizeSearchInput(query);
         const clearBtn = document.getElementById('clearSearch');
+        const helpDiv = document.getElementById('searchHelp');
+        
         clearBtn.style.display = query ? 'block' : 'none';
+        
+        // Show/hide search help based on focus and query
+        if (query && this.isSearchFocused && !this.parseSmartSearch(query).hasOperators && helpDiv) {
+            helpDiv.style.display = 'block';
+        }
         
         this.applyCurrentFilters();
         this.renderNews();
@@ -932,6 +1223,127 @@ class NewsAggregator {
                 this.announceToScreenReader(`Search for "${query}" found ${this.filteredArticles.length} articles`);
             }, 500);
         }
+    }
+
+    parseSmartSearch(query) {
+        const result = {
+            includeTerms: [],
+            excludeTerms: [],
+            exactPhrases: [],
+            categoryFilter: null,
+            hasOperators: false
+        };
+
+        if (!query) return result;
+
+        // Reset regex patterns for fresh execution
+        this.phraseRegex.lastIndex = 0;
+        this.categoryRegex.lastIndex = 0;
+        
+        // Extract quoted phrases first
+        let match;
+        while ((match = this.phraseRegex.exec(query)) !== null) {
+            result.exactPhrases.push(match[1].toLowerCase());
+            result.hasOperators = true;
+        }
+        
+        // Remove quoted phrases from query for further processing
+        let cleanQuery = query.replace(this.phraseRegex, ' ');
+        
+        // Extract category filters
+        while ((match = this.categoryRegex.exec(cleanQuery)) !== null) {
+            const category = match[1].toLowerCase();
+            switch(category) {
+                case 'industry':
+                    result.categoryFilter = 'AI Industry';
+                    break;
+                case 'news':
+                    result.categoryFilter = 'AI News';
+                    break;
+                case 'research':
+                    result.categoryFilter = 'AI Research';
+                    break;
+                case 'tools':
+                    result.categoryFilter = 'Coding Tools';
+                    break;
+                case 'aitools':
+                    result.categoryFilter = 'AI Tools';
+                    break;
+                default:
+                    result.categoryFilter = category;
+            }
+            result.hasOperators = true;
+        }
+        
+        // Remove category filters from query
+        cleanQuery = cleanQuery.replace(this.categoryRegex, ' ');
+        
+        // Split remaining query into words and process + and - operators
+        const words = cleanQuery.split(/\s+/).filter(word => word.trim());
+        
+        for (const word of words) {
+            if (word.startsWith('+')) {
+                result.includeTerms.push(word.substring(1).toLowerCase());
+                result.hasOperators = true;
+            } else if (word.startsWith('-')) {
+                result.excludeTerms.push(word.substring(1).toLowerCase());
+                result.hasOperators = true;
+            } else if (word.trim()) {
+                // Regular search terms are treated as "should include"
+                result.includeTerms.push(word.toLowerCase());
+            }
+        }
+
+        return result;
+    }
+
+    matchesSmartSearch(article, searchTerms) {
+        if (!searchTerms || (!searchTerms.includeTerms.length && !searchTerms.excludeTerms.length && 
+            !searchTerms.exactPhrases.length && !searchTerms.categoryFilter)) {
+            return true;
+        }
+
+        const searchText = `${article.title} ${article.summary || ''} ${article.content || ''}`.toLowerCase();
+        
+        // Category filter
+        if (searchTerms.categoryFilter && article.category !== searchTerms.categoryFilter) {
+            return false;
+        }
+        
+        // Exclude terms (any match excludes the article)
+        for (const term of searchTerms.excludeTerms) {
+            if (searchText.includes(term)) {
+                return false;
+            }
+        }
+        
+        // Exact phrases (all must match)
+        for (const phrase of searchTerms.exactPhrases) {
+            if (!searchText.includes(phrase)) {
+                return false;
+            }
+        }
+        
+        // Include terms (all must match if any are specified)
+        if (searchTerms.includeTerms.length > 0) {
+            for (const term of searchTerms.includeTerms) {
+                if (!searchText.includes(term)) {
+                    return false;
+                }
+            }
+        }
+        
+        return true;
+    }
+    
+    sanitizeSearchInput(input) {
+        return window.Sanitizer ? window.Sanitizer.sanitizeSearchInput(input) : this.fallbackSanitizeSearchInput(input);
+    }
+    
+    fallbackSanitizeSearchInput(input) {
+        if (typeof input !== 'string') return '';
+        // Remove potentially dangerous characters while preserving search operators
+        return input.replace(/[<>]/g, '').trim().substring(0, 200);
     }
     
     clearSearch() {
@@ -1158,7 +1570,7 @@ class NewsAggregator {
                 this.saveArticle(articleId);
             });
         });
-        
+
         document.querySelectorAll('.share-btn.action-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -1166,7 +1578,31 @@ class NewsAggregator {
                 this.toggleShareMenu(card);
             });
         });
-        
+
+        // Duplicate badge click handlers
+        document.querySelectorAll('.duplicate-badge').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const articleId = btn.dataset.articleId;
+                this.toggleDuplicates(articleId);
+            });
+        });
+
+        // AI Summary button click handlers
+        document.querySelectorAll('.ai-summary-button').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const articleId = btn.dataset.articleId;
+                console.log('AI Summary button clicked for article:', articleId);
+                if (articleId) {
+                    this.toggleAISummary(articleId);
+                } else {
+                    console.error('No article ID found on button');
+                }
+            });
+        });
+
         // Close share menus when clicking outside
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.share-buttons') && !e.target.closest('.share-btn.action-btn')) {
