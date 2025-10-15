@@ -3,9 +3,9 @@
  * Provides offline functionality and caching
  */
 
-const CACHE_NAME = 'ai-news-hub-v1';
-const STATIC_CACHE = 'ai-news-static-v1';
-const DYNAMIC_CACHE = 'ai-news-dynamic-v1';
+const CACHE_NAME = 'ai-news-hub-v2';
+const STATIC_CACHE = 'ai-news-static-v2';
+const DYNAMIC_CACHE = 'ai-news-dynamic-v2';
 
 // Assets to cache on install
 const STATIC_ASSETS = [
@@ -18,7 +18,11 @@ const STATIC_ASSETS = [
     '/architecture.html',
     '/favicon.svg',
     '/manifest.json',
-    '/utils/sanitizer.js'
+    '/utils/sanitizer.js',
+    '/utils/deduplication.js',
+    '/utils/collections.js',
+    '/utils/semantic-search.js',
+    '/utils/reading-analytics.js'
 ];
 
 // Install event - cache static assets

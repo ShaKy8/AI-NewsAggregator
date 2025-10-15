@@ -260,8 +260,8 @@ class ArticleDeduplicator {
     /**
      * Get statistics about deduplication
      */
-    getDeduplicationStats(articles, deduplicatedArticles) {
-        const totalOriginal = articles.length;
+    getDeduplicationStats(originalCount, deduplicatedArticles) {
+        const totalOriginal = originalCount;
         const totalUnique = deduplicatedArticles.length;
         const totalDuplicatesRemoved = totalOriginal - totalUnique;
         const articlesWithDuplicates = deduplicatedArticles.filter(a => a.duplicateCount > 0).length;
