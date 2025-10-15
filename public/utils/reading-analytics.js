@@ -511,6 +511,62 @@ class ReadingAnalytics {
         if (daysActive === 0) return 0;
         return (this.data.stats.totalArticlesRead / daysActive).toFixed(1);
     }
+
+    /**
+     * Alias for getReadingActivityByDay for compatibility
+     */
+    getActivityByDate(days = 30) {
+        return this.getReadingActivityByDay(days);
+    }
+
+    /**
+     * Alias for getTopSources for compatibility
+     */
+    getSourceDistribution() {
+        return this.getTopSources(10);
+    }
+
+    /**
+     * Get time-based reading patterns
+     * Returns peak hour, most active day, and average reads per day
+     */
+    getTimePatterns() {
+        // Get peak hour
+        const hourlyActivity = this.getActivityByHour();
+        let peakHour = '-';
+        let maxHourReads = 0;
+
+        hourlyActivity.forEach(item => {
+            if (item.count > maxHourReads) {
+                maxHourReads = item.count;
+                const hour = parseInt(item.hour);
+                const period = hour >= 12 ? 'PM' : 'AM';
+                const displayHour = hour === 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+                peakHour = `${displayHour}:00 ${period}`;
+            }
+        });
+
+        // Get most active day
+        const dailyActivity = this.getActivityByDayOfWeek();
+        let mostActiveDay = '-';
+        let maxDayReads = 0;
+
+        dailyActivity.forEach(item => {
+            if (item.count > maxDayReads) {
+                maxDayReads = item.count;
+                mostActiveDay = item.day;
+            }
+        });
+
+        // Get average per day
+        const averagePerDay = parseFloat(this.getAverageArticlesPerDay());
+
+        return {
+            peakHour,
+            mostActiveDay,
+            averagePerDay
+        };
+    }
 }
 
 // Make it available globally
