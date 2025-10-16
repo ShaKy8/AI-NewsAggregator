@@ -66,7 +66,9 @@ function getScraperForSource(source) {
     'Cybersecurity News': scrapeCybersecurityNews,
     'Neowin': scrapeNeowin,
     'AskWoody': scrapeAskWoody,
-    'TechCrunch': scrapeTechCrunch
+    'TechCrunch': scrapeTechCrunch,
+    'Google Research Blog': scrapeGoogleResearch,
+    'Hugging Face Blog': scrapeHuggingFace
   };
   
   // If we have a specific scraper, use it
@@ -355,6 +357,77 @@ async function scrapeTechCrunch() {
         summary: summary || 'No summary available',
         source: 'TechCrunch',
         category: mapCategory('Technology'),
+        publishedAt,
+        scraped: new Date().toISOString()
+      });
+    }
+  });
+
+  return articles;
+}
+
+async function scrapeGoogleResearch() {
+  const html = await fetchPage('https://research.google/blog/');
+  if (!html) return [];
+
+  const $ = cheerio.load(html);
+  const articles = [];
+
+  // Google Research Blog uses blog-post-list articles
+  $('.blog-post-list article, article').each((i, element) => {
+    if (i >= 10) return false;
+
+    const $element = $(element);
+    const $link = $element.find('a').first();
+    const title = $element.find('h2, h3').first().text().trim();
+    const link = $link.attr('href');
+    const summary = $element.find('p').first().text().trim();
+    const $time = $element.find('time');
+    const publishedAt = $time.length ? $time.text().trim() : 'Recently';
+
+    if (title && link) {
+      articles.push({
+        title,
+        link: link.startsWith('http') ? link : `https://research.google${link}`,
+        summary: summary || 'No summary available',
+        source: 'Google Research Blog',
+        category: mapCategory('AI & ML'),
+        publishedAt,
+        scraped: new Date().toISOString()
+      });
+    }
+  });
+
+  return articles;
+}
+
+async function scrapeHuggingFace() {
+  const html = await fetchPage('https://huggingface.co/blog');
+  if (!html) return [];
+
+  const $ = cheerio.load(html);
+  const articles = [];
+
+  // Hugging Face blog uses various selectors
+  $('a[href^="/blog/"]').each((i, element) => {
+    if (i >= 10) return false;
+
+    const $element = $(element);
+    const title = $element.text().trim();
+    const link = $element.attr('href');
+
+    // Find parent container for additional info
+    const $container = $element.closest('article, .blog-article, div');
+    const summary = $container.find('p').first().text().trim();
+    const publishedAt = $container.find('time, .date').first().text().trim() || 'Recently';
+
+    if (title && link && title.length > 0) {
+      articles.push({
+        title,
+        link: link.startsWith('http') ? link : `https://huggingface.co${link}`,
+        summary: summary || 'No summary available',
+        source: 'Hugging Face Blog',
+        category: mapCategory('AI & ML'),
         publishedAt,
         scraped: new Date().toISOString()
       });

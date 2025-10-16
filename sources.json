@@ -7,9 +7,9 @@
     "status": "active",
     "created": "2025-08-11T22:09:57.719Z",
     "articleCount": 10,
-    "lastSuccess": "2025-10-16T18:02:27.494Z",
+    "lastSuccess": "2025-10-16T20:00:01.078Z",
     "lastError": null,
-    "lastAttempt": "2025-10-16T18:02:27.494Z"
+    "lastAttempt": "2025-10-16T20:00:01.078Z"
   },
   {
     "id": "3",
@@ -19,9 +19,9 @@
     "status": "active",
     "created": "2025-08-11T22:09:57.719Z",
     "articleCount": 10,
-    "lastSuccess": "2025-10-16T18:02:30.250Z",
+    "lastSuccess": "2025-10-16T20:00:03.537Z",
     "lastError": null,
-    "lastAttempt": "2025-10-16T18:02:30.250Z"
+    "lastAttempt": "2025-10-16T20:00:03.537Z"
   },
   {
     "id": "1754951073270",
@@ -31,9 +31,9 @@
     "status": "active",
     "created": "2025-08-11T22:24:33.270Z",
     "articleCount": 1,
-    "lastSuccess": "2025-10-16T18:02:30.366Z",
+    "lastSuccess": "2025-10-16T20:00:03.779Z",
     "lastError": null,
-    "lastAttempt": "2025-10-16T18:02:30.366Z"
+    "lastAttempt": "2025-10-16T20:00:03.779Z"
   },
   {
     "id": "8",
@@ -43,9 +43,9 @@
     "status": "active",
     "created": "2025-08-12T15:00:00.000Z",
     "articleCount": 10,
-    "lastSuccess": "2025-10-16T18:02:31.785Z",
+    "lastSuccess": "2025-10-16T20:00:04.834Z",
     "lastError": null,
-    "lastAttempt": "2025-10-16T18:02:31.785Z"
+    "lastAttempt": "2025-10-16T20:00:04.834Z"
   },
   {
     "id": "9",
@@ -55,9 +55,9 @@
     "status": "active",
     "created": "2025-08-12T15:00:00.000Z",
     "articleCount": 10,
-    "lastSuccess": "2025-10-16T18:02:32.329Z",
+    "lastSuccess": "2025-10-16T20:00:05.850Z",
     "lastError": null,
-    "lastAttempt": "2025-10-16T18:02:32.329Z"
+    "lastAttempt": "2025-10-16T20:00:05.850Z"
   },
   {
     "id": "11",
@@ -67,9 +67,9 @@
     "status": "active",
     "created": "2025-08-12T15:00:00.000Z",
     "articleCount": 10,
-    "lastSuccess": "2025-10-16T18:02:33.659Z",
+    "lastSuccess": "2025-10-16T20:00:07.041Z",
     "lastError": null,
-    "lastAttempt": "2025-10-16T18:02:33.659Z"
+    "lastAttempt": "2025-10-16T20:00:07.041Z"
   },
   {
     "id": "1755528834459",
@@ -79,9 +79,9 @@
     "status": "active",
     "created": "2025-08-18T14:53:54.471Z",
     "articleCount": 10,
-    "lastSuccess": "2025-10-16T18:02:35.111Z",
+    "lastSuccess": "2025-10-16T20:00:08.424Z",
     "lastError": null,
-    "lastAttempt": "2025-10-16T18:02:35.111Z"
+    "lastAttempt": "2025-10-16T20:00:08.424Z"
   },
   {
     "id": "1755638934462",
@@ -91,9 +91,9 @@
     "status": "active",
     "created": "2025-10-15T18:30:00.000Z",
     "articleCount": 10,
-    "lastSuccess": "2025-10-16T18:02:35.406Z",
+    "lastSuccess": "2025-10-16T20:00:09.149Z",
     "lastError": null,
-    "lastAttempt": "2025-10-16T18:02:35.406Z"
+    "lastAttempt": "2025-10-16T20:00:09.149Z"
   },
   {
     "id": "1755638934466",
@@ -103,9 +103,9 @@
     "status": "active",
     "created": "2025-10-15T18:30:00.000Z",
     "articleCount": 1,
-    "lastSuccess": "2025-10-16T18:02:36.888Z",
+    "lastSuccess": "2025-10-16T20:00:10.339Z",
     "lastError": null,
-    "lastAttempt": "2025-10-16T18:02:36.888Z"
+    "lastAttempt": "2025-10-16T20:00:10.339Z"
   },
   {
     "id": "1755800000002",
@@ -115,9 +115,9 @@
     "status": "active",
     "created": "2025-10-15T20:00:00.000Z",
     "articleCount": 1,
-    "lastSuccess": "2025-10-16T18:02:45.143Z",
+    "lastSuccess": "2025-10-16T20:00:11.259Z",
     "lastError": null,
-    "lastAttempt": "2025-10-16T18:02:45.143Z"
+    "lastAttempt": "2025-10-16T20:00:11.259Z"
   },
   {
     "id": "1755800000004",
@@ -127,9 +127,9 @@
     "status": "active",
     "created": "2025-10-15T20:00:00.000Z",
     "articleCount": 10,
-    "lastSuccess": "2025-10-16T18:02:47.142Z",
+    "lastSuccess": "2025-10-16T20:00:12.318Z",
     "lastError": null,
-    "lastAttempt": "2025-10-16T18:02:47.142Z"
+    "lastAttempt": "2025-10-16T20:00:12.318Z"
   },
   {
     "id": "1755800000007",
@@ -139,9 +139,9 @@
     "status": "active",
     "created": "2025-10-15T20:00:00.000Z",
     "articleCount": 10,
-    "lastSuccess": "2025-10-16T18:02:49.992Z",
+    "lastSuccess": "2025-10-16T20:00:12.840Z",
     "lastError": null,
-    "lastAttempt": "2025-10-16T18:02:49.992Z"
+    "lastAttempt": "2025-10-16T20:00:12.840Z"
   },
   {
     "id": "1755800000008",
@@ -151,9 +151,9 @@
     "status": "active",
     "created": "2025-10-15T20:00:00.000Z",
     "articleCount": 6,
-    "lastSuccess": "2025-10-16T18:02:51.089Z",
+    "lastSuccess": "2025-10-16T20:00:13.876Z",
     "lastError": null,
-    "lastAttempt": "2025-10-16T18:02:51.089Z"
+    "lastAttempt": "2025-10-16T20:00:13.876Z"
   },
   {
     "id": "1755800000010",
@@ -163,9 +163,9 @@
     "status": "active",
     "created": "2025-10-15T20:00:00.000Z",
     "articleCount": 10,
-    "lastSuccess": "2025-10-16T18:02:52.966Z",
+    "lastSuccess": "2025-10-16T20:00:15.326Z",
     "lastError": null,
-    "lastAttempt": "2025-10-16T18:02:52.966Z"
+    "lastAttempt": "2025-10-16T20:00:15.326Z"
   },
   {
     "id": "1755800000014",
@@ -175,8 +175,24 @@
     "status": "active",
     "created": "2025-10-15T20:05:00.000Z",
     "articleCount": 10,
-    "lastSuccess": "2025-10-16T18:02:57.876Z",
+    "lastSuccess": "2025-10-16T20:00:16.160Z",
     "lastError": null,
-    "lastAttempt": "2025-10-16T18:02:57.876Z"
+    "lastAttempt": "2025-10-16T20:00:16.160Z"
+  },
+  {
+    "id": "1755800000017",
+    "name": "Google Research Blog",
+    "url": "https://research.google/blog/",
+    "category": "AI & ML",
+    "status": "active",
+    "created": "2025-10-16T20:30:00.000Z"
+  },
+  {
+    "id": "1755800000018",
+    "name": "Hugging Face Blog",
+    "url": "https://huggingface.co/blog",
+    "category": "AI & ML",
+    "status": "active",
+    "created": "2025-10-16T20:30:00.000Z"
   }
 ]
