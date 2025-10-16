@@ -7,17 +7,9 @@
     "status": "active",
     "created": "2025-08-11T22:09:57.719Z",
     "articleCount": 10,
-    "lastSuccess": "2025-10-15T20:00:01.543Z",
+    "lastSuccess": "2025-10-16T18:02:27.494Z",
     "lastError": null,
-    "lastAttempt": "2025-10-15T20:00:01.543Z"
-  },
-  {
-    "id": "2",
-    "name": "Cybersecurity News",
-    "url": "https://cybersecuritynews.com/",
-    "category": "Cybersecurity",
-    "status": "active",
-    "created": "2025-08-11T22:09:57.719Z"
+    "lastAttempt": "2025-10-16T18:02:27.494Z"
   },
   {
     "id": "3",
@@ -27,9 +19,9 @@
     "status": "active",
     "created": "2025-08-11T22:09:57.719Z",
     "articleCount": 10,
-    "lastSuccess": "2025-10-15T20:00:04.300Z",
+    "lastSuccess": "2025-10-16T18:02:30.250Z",
     "lastError": null,
-    "lastAttempt": "2025-10-15T20:00:04.300Z"
+    "lastAttempt": "2025-10-16T18:02:30.250Z"
   },
   {
     "id": "1754951073270",
@@ -39,9 +31,9 @@
     "status": "active",
     "created": "2025-08-11T22:24:33.270Z",
     "articleCount": 1,
-    "lastSuccess": "2025-10-15T20:00:04.433Z",
+    "lastSuccess": "2025-10-16T18:02:30.366Z",
     "lastError": null,
-    "lastAttempt": "2025-10-15T20:00:04.433Z"
+    "lastAttempt": "2025-10-16T18:02:30.366Z"
   },
   {
     "id": "8",
@@ -51,9 +43,9 @@
     "status": "active",
     "created": "2025-08-12T15:00:00.000Z",
     "articleCount": 10,
-    "lastSuccess": "2025-10-15T20:00:05.595Z",
+    "lastSuccess": "2025-10-16T18:02:31.785Z",
     "lastError": null,
-    "lastAttempt": "2025-10-15T20:00:05.595Z"
+    "lastAttempt": "2025-10-16T18:02:31.785Z"
   },
   {
     "id": "9",
@@ -63,9 +55,9 @@
     "status": "active",
     "created": "2025-08-12T15:00:00.000Z",
     "articleCount": 10,
-    "lastSuccess": "2025-10-15T20:00:06.585Z",
+    "lastSuccess": "2025-10-16T18:02:32.329Z",
     "lastError": null,
-    "lastAttempt": "2025-10-15T20:00:06.585Z"
+    "lastAttempt": "2025-10-16T18:02:32.329Z"
   },
   {
     "id": "11",
@@ -75,9 +67,9 @@
     "status": "active",
     "created": "2025-08-12T15:00:00.000Z",
     "articleCount": 10,
-    "lastSuccess": "2025-10-15T20:00:07.717Z",
+    "lastSuccess": "2025-10-16T18:02:33.659Z",
     "lastError": null,
-    "lastAttempt": "2025-10-15T20:00:07.717Z"
+    "lastAttempt": "2025-10-16T18:02:33.659Z"
   },
   {
     "id": "1755528834459",
@@ -87,9 +79,9 @@
     "status": "active",
     "created": "2025-08-18T14:53:54.471Z",
     "articleCount": 10,
-    "lastSuccess": "2025-10-15T20:00:09.096Z",
+    "lastSuccess": "2025-10-16T18:02:35.111Z",
     "lastError": null,
-    "lastAttempt": "2025-10-15T20:00:09.096Z"
+    "lastAttempt": "2025-10-16T18:02:35.111Z"
   },
   {
     "id": "1755638934462",
@@ -99,9 +91,9 @@
     "status": "active",
     "created": "2025-10-15T18:30:00.000Z",
     "articleCount": 10,
-    "lastSuccess": "2025-10-15T20:00:09.709Z",
+    "lastSuccess": "2025-10-16T18:02:35.406Z",
     "lastError": null,
-    "lastAttempt": "2025-10-15T20:00:09.709Z"
+    "lastAttempt": "2025-10-16T18:02:35.406Z"
   },
   {
     "id": "1755638934466",
@@ -111,17 +103,9 @@
     "status": "active",
     "created": "2025-10-15T18:30:00.000Z",
     "articleCount": 1,
-    "lastSuccess": "2025-10-15T20:00:10.618Z",
+    "lastSuccess": "2025-10-16T18:02:36.888Z",
     "lastError": null,
-    "lastAttempt": "2025-10-15T20:00:10.618Z"
-  },
-  {
-    "id": "1755800000001",
-    "name": "OpenAI Blog",
-    "url": "https://openai.com/blog",
-    "category": "AI & ML",
-    "status": "active",
-    "created": "2025-10-15T20:00:00.000Z"
+    "lastAttempt": "2025-10-16T18:02:36.888Z"
   },
   {
     "id": "1755800000002",
@@ -131,17 +115,9 @@
     "status": "active",
     "created": "2025-10-15T20:00:00.000Z",
     "articleCount": 1,
-    "lastSuccess": "2025-10-15T20:00:19.949Z",
+    "lastSuccess": "2025-10-16T18:02:45.143Z",
     "lastError": null,
-    "lastAttempt": "2025-10-15T20:00:19.949Z"
-  },
-  {
-    "id": "1755800000003",
-    "name": "Google AI Blog",
-    "url": "https://ai.googleblog.com",
-    "category": "AI & ML",
-    "status": "active",
-    "created": "2025-10-15T20:00:00.000Z"
+    "lastAttempt": "2025-10-16T18:02:45.143Z"
   },
   {
     "id": "1755800000004",
@@ -151,25 +127,9 @@
     "status": "active",
     "created": "2025-10-15T20:00:00.000Z",
     "articleCount": 10,
-    "lastSuccess": "2025-10-15T20:00:22.331Z",
+    "lastSuccess": "2025-10-16T18:02:47.142Z",
     "lastError": null,
-    "lastAttempt": "2025-10-15T20:00:22.331Z"
-  },
-  {
-    "id": "1755800000005",
-    "name": "Hugging Face Blog",
-    "url": "https://huggingface.co/blog",
-    "category": "AI & ML",
-    "status": "active",
-    "created": "2025-10-15T20:00:00.000Z"
-  },
-  {
-    "id": "1755800000006",
-    "name": "DeepMind Blog",
-    "url": "https://deepmind.google/discover/blog/",
-    "category": "AI & ML",
-    "status": "active",
-    "created": "2025-10-15T20:00:00.000Z"
+    "lastAttempt": "2025-10-16T18:02:47.142Z"
   },
   {
     "id": "1755800000007",
@@ -179,9 +139,9 @@
     "status": "active",
     "created": "2025-10-15T20:00:00.000Z",
     "articleCount": 10,
-    "lastSuccess": "2025-10-15T20:00:24.969Z",
+    "lastSuccess": "2025-10-16T18:02:49.992Z",
     "lastError": null,
-    "lastAttempt": "2025-10-15T20:00:24.969Z"
+    "lastAttempt": "2025-10-16T18:02:49.992Z"
   },
   {
     "id": "1755800000008",
@@ -191,17 +151,9 @@
     "status": "active",
     "created": "2025-10-15T20:00:00.000Z",
     "articleCount": 6,
-    "lastSuccess": "2025-10-15T20:00:25.967Z",
+    "lastSuccess": "2025-10-16T18:02:51.089Z",
     "lastError": null,
-    "lastAttempt": "2025-10-15T20:00:25.967Z"
-  },
-  {
-    "id": "1755800000009",
-    "name": "Cursor Blog",
-    "url": "https://cursor.sh/blog",
-    "category": "Developer Tools",
-    "status": "active",
-    "created": "2025-10-15T20:00:00.000Z"
+    "lastAttempt": "2025-10-16T18:02:51.089Z"
   },
   {
     "id": "1755800000010",
@@ -211,33 +163,9 @@
     "status": "active",
     "created": "2025-10-15T20:00:00.000Z",
     "articleCount": 10,
-    "lastSuccess": "2025-10-15T20:00:29.148Z",
+    "lastSuccess": "2025-10-16T18:02:52.966Z",
     "lastError": null,
-    "lastAttempt": "2025-10-15T20:00:29.148Z"
-  },
-  {
-    "id": "1755800000011",
-    "name": "Replicate Blog",
-    "url": "https://replicate.com/blog",
-    "category": "AI & ML",
-    "status": "active",
-    "created": "2025-10-15T20:00:00.000Z"
-  },
-  {
-    "id": "1755800000012",
-    "name": "Tabnine Blog",
-    "url": "https://www.tabnine.com/blog",
-    "category": "AI Coding Tools",
-    "status": "active",
-    "created": "2025-10-15T20:05:00.000Z"
-  },
-  {
-    "id": "1755800000013",
-    "name": "Codeium Blog",
-    "url": "https://codeium.com/blog",
-    "category": "AI Coding Tools",
-    "status": "active",
-    "created": "2025-10-15T20:05:00.000Z"
+    "lastAttempt": "2025-10-16T18:02:52.966Z"
   },
   {
     "id": "1755800000014",
@@ -245,22 +173,10 @@
     "url": "https://aws.amazon.com/blogs/machine-learning/",
     "category": "AI Coding Tools",
     "status": "active",
-    "created": "2025-10-15T20:05:00.000Z"
-  },
-  {
-    "id": "1755800000015",
-    "name": "JetBrains Blog",
-    "url": "https://blog.jetbrains.com/",
-    "category": "AI Coding Tools",
-    "status": "active",
-    "created": "2025-10-15T20:05:00.000Z"
-  },
-  {
-    "id": "1755800000016",
-    "name": "Sourcegraph Blog",
-    "url": "https://about.sourcegraph.com/blog",
-    "category": "AI Coding Tools",
-    "status": "active",
-    "created": "2025-10-15T20:05:00.000Z"
+    "created": "2025-10-15T20:05:00.000Z",
+    "articleCount": 10,
+    "lastSuccess": "2025-10-16T18:02:57.876Z",
+    "lastError": null,
+    "lastAttempt": "2025-10-16T18:02:57.876Z"
   }
 ]
