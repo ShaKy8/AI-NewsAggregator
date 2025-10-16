@@ -84,6 +84,7 @@ class NewsAggregator {
         this.updateSourcesCount();
         this.startRealTimeClock();
         this.setupStickyHeader();
+        this.setupLazyLoading();
         this.cleanupLegacyStorage();
         this.loadNews();
         this.loadDynamicSources();
@@ -2917,6 +2918,51 @@ class NewsAggregator {
 
         // Announce page change to screen readers
         this.announceToScreenReader(`Now on page ${page} of ${totalPages}`);
+    }
+
+    setupLazyLoading() {
+        // Create Intersection Observer for lazy loading images
+        // Currently no images in articles, but this is ready for future use
+        if (!('IntersectionObserver' in window)) {
+            console.log('[Performance] IntersectionObserver not supported, lazy loading disabled');
+            return;
+        }
+
+        this.lazyImageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    const src = img.dataset.src;
+
+                    if (src) {
+                        img.src = src;
+                        img.removeAttribute('data-src');
+                        img.classList.remove('lazy');
+                        img.classList.add('lazy-loaded');
+                        observer.unobserve(img);
+                    }
+                }
+            });
+        }, {
+            root: null,
+            rootMargin: '50px',
+            threshold: 0.01
+        });
+
+        console.log('[Performance] Lazy loading initialized');
+    }
+
+    observeLazyImages() {
+        // Re-observe lazy images after rendering
+        // Call this after renderNews() when images are added to articles
+        if (!this.lazyImageObserver) return;
+
+        const lazyImages = document.querySelectorAll('img.lazy[data-src]');
+        lazyImages.forEach(img => this.lazyImageObserver.observe(img));
+
+        if (lazyImages.length > 0) {
+            console.log(`[Performance] Observing ${lazyImages.length} lazy images`);
+        }
     }
 }
 
