@@ -43,6 +43,10 @@ class NewsAggregator {
         this.expandedAISummaries = new Set(); // Track which AI summaries are expanded
         this.generatingAISummaries = new Set(); // Track which summaries are being generated
 
+        // Pagination settings
+        this.currentPage = 1;
+        this.articlesPerPage = 20;
+
         // Pre-compile regex patterns for better performance
         this.phraseRegex = /"([^"]+)"/g;
         this.categoryRegex = /category:(\w+)/g;
@@ -297,7 +301,8 @@ class NewsAggregator {
 
     filterNews(filter) {
         this.currentFilter = filter;
-        
+        this.currentPage = 1; // Reset to first page when filtering
+
         document.querySelectorAll('.filter-btn').forEach(btn => {
             const isActive = btn.dataset.filter === filter;
             btn.classList.toggle('active', isActive);
@@ -308,7 +313,7 @@ class NewsAggregator {
         this.renderNews();
         this.updateStats();
         this.updateFilterCounts();
-        
+
         // Announce filter change to screen readers
         this.announceToScreenReader(`Filtered to ${filter === 'all' ? 'all articles' : filter + ' articles'}. Showing ${this.filteredArticles.length} articles.`);
     }
@@ -317,29 +322,42 @@ class NewsAggregator {
         const newsGrid = document.getElementById('newsGrid');
         const noArticles = document.getElementById('noArticles');
         const skeletonLoader = document.getElementById('skeletonLoader');
-        
+
         skeletonLoader.style.display = 'none';
-        
+
         if (this.filteredArticles.length === 0) {
             newsGrid.style.display = 'none';
             noArticles.style.display = 'block';
+            this.renderPagination();
             return;
         }
-        
+
         newsGrid.style.display = 'grid';
         noArticles.style.display = 'none';
-        
+
+        // Calculate pagination
+        const totalPages = Math.ceil(this.filteredArticles.length / this.articlesPerPage);
+        const startIndex = (this.currentPage - 1) * this.articlesPerPage;
+        const endIndex = startIndex + this.articlesPerPage;
+        const paginatedArticles = this.filteredArticles.slice(startIndex, endIndex);
+
         // Use safer DOM manipulation instead of innerHTML
-        const articlesHTML = this.filteredArticles.map(article => this.createArticleCard(article)).join('');
+        const articlesHTML = paginatedArticles.map(article => this.createArticleCard(article)).join('');
         const sanitizedHTML = window.Sanitizer ? window.Sanitizer.sanitizeHtml(articlesHTML) : articlesHTML;
         newsGrid.innerHTML = sanitizedHTML;
-        
+
         newsGrid.querySelectorAll('.news-card').forEach((card, index) => {
             card.style.animationDelay = `${index * 0.1}s`;
             card.classList.add('fade-in');
         });
-        
+
         this.bindCardEventListeners();
+        this.renderPagination();
+
+        // Scroll to top when changing pages
+        if (startIndex > 0) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     }
 
     createArticleCard(article) {
@@ -2804,6 +2822,101 @@ class NewsAggregator {
             this.collectionManager.removeArticleFromCollection(collectionId, articleId);
             this.showNotification('Removed from collection');
         }
+    }
+
+    renderPagination() {
+        const paginationContainer = document.getElementById('paginationControls');
+        if (!paginationContainer) return;
+
+        const totalPages = Math.ceil(this.filteredArticles.length / this.articlesPerPage);
+
+        if (totalPages <= 1) {
+            paginationContainer.style.display = 'none';
+            return;
+        }
+
+        paginationContainer.style.display = 'flex';
+
+        // Generate page buttons
+        let paginationHTML = '';
+
+        // Previous button
+        paginationHTML += `
+            <button class="pagination-btn ${this.currentPage === 1 ? 'disabled' : ''}"
+                    onclick="newsAggregator.changePage(${this.currentPage - 1})"
+                    ${this.currentPage === 1 ? 'disabled' : ''}
+                    aria-label="Previous page">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+        `;
+
+        // First page
+        if (this.currentPage > 3) {
+            paginationHTML += `
+                <button class="pagination-btn" onclick="newsAggregator.changePage(1)">1</button>
+            `;
+            if (this.currentPage > 4) {
+                paginationHTML += `<span class="pagination-ellipsis">...</span>`;
+            }
+        }
+
+        // Page numbers around current page
+        const startPage = Math.max(1, this.currentPage - 2);
+        const endPage = Math.min(totalPages, this.currentPage + 2);
+
+        for (let i = startPage; i <= endPage; i++) {
+            paginationHTML += `
+                <button class="pagination-btn ${i === this.currentPage ? 'active' : ''}"
+                        onclick="newsAggregator.changePage(${i})"
+                        aria-label="Page ${i}"
+                        ${i === this.currentPage ? 'aria-current="page"' : ''}>
+                    ${i}
+                </button>
+            `;
+        }
+
+        // Last page
+        if (this.currentPage < totalPages - 2) {
+            if (this.currentPage < totalPages - 3) {
+                paginationHTML += `<span class="pagination-ellipsis">...</span>`;
+            }
+            paginationHTML += `
+                <button class="pagination-btn" onclick="newsAggregator.changePage(${totalPages})">${totalPages}</button>
+            `;
+        }
+
+        // Next button
+        paginationHTML += `
+            <button class="pagination-btn ${this.currentPage === totalPages ? 'disabled' : ''}"
+                    onclick="newsAggregator.changePage(${this.currentPage + 1})"
+                    ${this.currentPage === totalPages ? 'disabled' : ''}
+                    aria-label="Next page">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        `;
+
+        // Page info
+        const startItem = (this.currentPage - 1) * this.articlesPerPage + 1;
+        const endItem = Math.min(this.currentPage * this.articlesPerPage, this.filteredArticles.length);
+        paginationHTML += `
+            <span class="pagination-info">
+                ${startItem}-${endItem} of ${this.filteredArticles.length}
+            </span>
+        `;
+
+        paginationContainer.innerHTML = paginationHTML;
+    }
+
+    changePage(page) {
+        const totalPages = Math.ceil(this.filteredArticles.length / this.articlesPerPage);
+
+        if (page < 1 || page > totalPages) return;
+
+        this.currentPage = page;
+        this.renderNews();
+
+        // Announce page change to screen readers
+        this.announceToScreenReader(`Now on page ${page} of ${totalPages}`);
     }
 }
 
